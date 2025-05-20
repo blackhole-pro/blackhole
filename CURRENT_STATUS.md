@@ -166,6 +166,8 @@ Working on implementing the Blackhole distributed content sharing platform with 
 - Focusing on component-level implementation details
 - Using interface-driven design with strong testing patterns
 - Building components with proper error handling and isolation
+- Using Zap for structured logging (better performance than Logrus)
+- Using Testify for enhanced testing capabilities
 
 ## Technical Stack
 - **Language**: Go (primary)
