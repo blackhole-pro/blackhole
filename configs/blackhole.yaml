@@ -1,0 +1,81 @@
+# Blackhole Configuration
+
+orchestrator:
+  socket_dir: /var/run/blackhole
+  log_level: info
+  
+services:
+  identity:
+    enabled: true
+    resources:
+      cpu: 200        # 200% = 2 CPU cores
+      memory: 1024    # MB
+      io_weight: 500  # Medium I/O priority
+    config:
+      database: postgres://identity:pass@localhost/identity
+      cache_size: 100MB
+      
+  storage:
+    enabled: true
+    resources:
+      cpu: 100        # 100% = 1 CPU core
+      memory: 2048    # MB
+      io_weight: 900  # High I/O priority
+    config:
+      ipfs_api: http://localhost:5001
+      filecoin_api: http://localhost:1234
+      chunk_size: 1MB
+      
+  ledger:
+    enabled: true
+    resources:
+      cpu: 150        # 150% = 1.5 CPU cores
+      memory: 1024    # MB
+      io_weight: 500  # Medium I/O priority
+    config:
+      root_network_api: http://localhost:9000
+      
+  social:
+    enabled: true
+    resources:
+      cpu: 100
+      memory: 512
+      io_weight: 400
+    config:
+      activitypub_port: 8008
+      
+  analytics:
+    enabled: true
+    resources:
+      cpu: 100
+      memory: 768
+      io_weight: 400
+    config:
+      timeseries_db: postgres://analytics:pass@localhost/analytics
+      
+  telemetry:
+    enabled: true
+    resources:
+      cpu: 50
+      memory: 512
+      io_weight: 300
+    config:
+      prometheus_port: 9090
+      
+  indexer:
+    enabled: true
+    resources:
+      cpu: 150
+      memory: 1024
+      io_weight: 600
+    config:
+      elasticsearch_url: http://localhost:9200
+      
+  wallet:
+    enabled: true
+    resources:
+      cpu: 100
+      memory: 512
+      io_weight: 400
+    config:
+      encryption_key: /etc/blackhole/wallet.key

@@ -1,0 +1,251 @@
+{
+  "meta": {
+    "generatedAt": "2025-05-20T09:44:36.360Z",
+    "tasksAnalyzed": 30,
+    "thresholdScore": 5,
+    "projectName": "Your Project Name",
+    "usedResearch": true
+  },
+  "complexityAnalysis": [
+    {
+      "taskId": 1,
+      "taskTitle": "Set up project structure and build system",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the Go project structure setup into specific subtasks covering module initialization, package organization, build system configuration, CI/CD pipeline setup, and documentation structure",
+      "reasoning": "Setting up a Go project structure requires understanding of Go module system, build tools, and CI/CD integration. The task involves multiple technical components including Makefile creation, GitHub Actions configuration, and establishing code guidelines."
+    },
+    {
+      "taskId": 2,
+      "taskTitle": "Implement core process orchestration system",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Detail the subtasks needed to build a process orchestration system including process spawning, lifecycle management, supervision, signal handling, isolation mechanisms, and CLI interface",
+      "reasoning": "This task involves complex system-level programming for process management, requiring deep understanding of OS capabilities, signal handling, and process isolation. The orchestrator is a critical foundation component with high technical complexity."
+    },
+    {
+      "taskId": 3,
+      "taskTitle": "Develop service discovery and RPC communication layer",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the implementation of a service discovery and gRPC communication system into subtasks covering registration mechanisms, transport protocols, connection management, message routing, and authentication",
+      "reasoning": "Building a service discovery and RPC layer requires networking expertise, understanding of gRPC, connection management, and security considerations. The distributed nature and authentication requirements increase complexity."
+    },
+    {
+      "taskId": 4,
+      "taskTitle": "Build configuration management system",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the subtasks for creating a unified configuration system with proper loading precedence, validation, service-specific sections, hot-reload capability, and secure handling of sensitive values",
+      "reasoning": "Configuration management involves multiple sources with precedence rules, validation logic, and security considerations for sensitive data. Hot-reload capability adds complexity but the overall scope is well-defined."
+    },
+    {
+      "taskId": 5,
+      "taskTitle": "Implement resource management and monitoring",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the resource management system implementation into subtasks covering allocation mechanisms, usage monitoring, adaptive management, reporting interfaces, and alerting systems",
+      "reasoning": "Resource management requires low-level system monitoring, adaptive algorithms, and integration with alerting systems. The complexity comes from accurately tracking and limiting resources across multiple processes."
+    },
+    {
+      "taskId": 6,
+      "taskTitle": "Develop logging and error handling infrastructure",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the subtasks for implementing a comprehensive logging system including structured logging format, level management, aggregation mechanisms, context-awareness, and log rotation",
+      "reasoning": "Creating a logging infrastructure involves designing consistent formats, aggregation from multiple processes, and implementing proper error handling patterns. The scope is well-defined but requires careful integration across services."
+    },
+    {
+      "taskId": 7,
+      "taskTitle": "Implement libp2p network foundation",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the libp2p integration into subtasks covering core library integration, peer discovery, DHT implementation, transport security, NAT traversal, and connection monitoring",
+      "reasoning": "Implementing P2P networking with libp2p involves complex distributed systems concepts, network protocols, security considerations, and NAT traversal techniques. This foundation is critical for the distributed nature of the system."
+    },
+    {
+      "taskId": 8,
+      "taskTitle": "Develop node bootstrap sequence",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the subtasks for creating a node bootstrap sequence including initialization, peer discovery, configuration validation, failure recovery, and progress reporting",
+      "reasoning": "Node bootstrapping requires careful sequencing, error handling, and recovery procedures. The complexity comes from ensuring nodes can reliably join the network under various network conditions and failure scenarios."
+    },
+    {
+      "taskId": 9,
+      "taskTitle": "Implement message routing infrastructure",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the message routing system implementation into subtasks covering protocol negotiation, message prioritization, delivery guarantees, connection management, security controls, and metrics",
+      "reasoning": "Message routing in P2P networks involves complex algorithms for efficient delivery, security considerations, and handling network partitions. The system must ensure reliable message delivery with appropriate guarantees."
+    },
+    {
+      "taskId": 10,
+      "taskTitle": "Develop event system",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the subtasks for implementing an event-driven architecture including event dispatch, propagation mechanisms, persistence, subscription management, and replay capabilities",
+      "reasoning": "Building an event system for both local and distributed events requires careful design for consistency, ordering, and delivery guarantees. The persistence and replay capabilities add significant complexity."
+    },
+    {
+      "taskId": 11,
+      "taskTitle": "Implement network synchronization",
+      "complexityScore": 9,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the network synchronization implementation into subtasks covering synchronization protocols, CRDT implementation, partition handling, consistency guarantees, progress monitoring, and performance optimization",
+      "reasoning": "Network synchronization in distributed systems is inherently complex, requiring advanced techniques like CRDTs, careful handling of network partitions, and ensuring eventual consistency. This is one of the most challenging distributed systems problems."
+    },
+    {
+      "taskId": 12,
+      "taskTitle": "Implement DID system",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the subtasks for building a W3C-compliant DID system including creation, resolution, method support, registry implementation, document management, and versioning",
+      "reasoning": "Implementing a DID system requires understanding of W3C standards, cryptographic principles, and identity management. Supporting multiple DID methods and ensuring proper verification adds complexity."
+    },
+    {
+      "taskId": 13,
+      "taskTitle": "Develop verifiable credential system",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the verifiable credential system implementation into subtasks covering issuance, validation, selective disclosure, revocation, schema management, storage, and presentation verification",
+      "reasoning": "Verifiable credentials involve complex cryptographic operations, selective disclosure mechanisms, and revocation systems. Ensuring compliance with standards while maintaining security and privacy makes this task challenging."
+    },
+    {
+      "taskId": 14,
+      "taskTitle": "Implement authentication service",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the subtasks for creating a DID-based authentication system including authentication flows, session management, token handling, multi-factor support, policy enforcement, and audit logging",
+      "reasoning": "Authentication services require secure implementation of cryptographic protocols, session management, and integration with identity systems. The multi-factor support and policy enforcement add significant complexity."
+    },
+    {
+      "taskId": 15,
+      "taskTitle": "Develop key management system",
+      "complexityScore": 9,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the key management system implementation into subtasks covering generation, secure storage, recovery mechanisms, synchronization, rotation procedures, backup functionality, and hardware security integration",
+      "reasoning": "Key management is critical for security and involves complex cryptographic operations, secure storage mechanisms, and recovery procedures. The multi-device synchronization and hardware security module support significantly increase complexity."
+    },
+    {
+      "taskId": 16,
+      "taskTitle": "Implement IPFS integration",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the subtasks for integrating with IPFS including content addressing, node integration, retrieval optimization, caching implementation, garbage collection, metrics, and configuration management",
+      "reasoning": "IPFS integration requires understanding of content-addressed storage, distributed hash tables, and caching strategies. The optimization for performance and proper garbage collection adds complexity."
+    },
+    {
+      "taskId": 17,
+      "taskTitle": "Develop Filecoin persistence layer",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the Filecoin integration into subtasks covering deal management, storage provider selection, long-term storage strategies, deal monitoring, retrieval mechanisms, cost optimization, and reporting",
+      "reasoning": "Filecoin integration involves blockchain interactions, complex deal management, and economic considerations. The long-term storage strategies and cost optimization require sophisticated algorithms and monitoring systems."
+    },
+    {
+      "taskId": 18,
+      "taskTitle": "Implement Reed-Solomon encoding for durability",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the subtasks for implementing Reed-Solomon encoding including high-parity implementation, fragment distribution, repair mechanisms, performance optimization, and monitoring systems",
+      "reasoning": "Reed-Solomon encoding involves complex mathematical algorithms, distribution strategies for fragments, and repair mechanisms. The high-parity requirement (k=10, n=30) and geographic diversity add significant complexity."
+    },
+    {
+      "taskId": 19,
+      "taskTitle": "Develop content lifecycle management",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the content lifecycle management system into subtasks covering state tracking, policy engine, tiered storage, user interfaces, metadata management, versioning, and access pattern monitoring",
+      "reasoning": "Content lifecycle management requires sophisticated state machines, policy engines, and integration with multiple storage systems. The versioning and access pattern monitoring add complexity to the implementation."
+    },
+    {
+      "taskId": 20,
+      "taskTitle": "Implement Root Network integration",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Detail the subtasks for integrating with Root Network blockchain including connection management, transaction handling, block monitoring, state synchronization, smart contract interaction, fee management, and metrics",
+      "reasoning": "Blockchain integration involves complex protocols, transaction management, and state synchronization. The smart contract interactions and fee management require deep understanding of blockchain technologies."
+    },
+    {
+      "taskId": 21,
+      "taskTitle": "Develop content tokenization via SFTs",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the SFT implementation into subtasks covering token standard implementation, content tokenization, metadata management, lifecycle handling, transfer functionality, ownership verification, and management interfaces",
+      "reasoning": "Implementing Semi-Fungible Tokens requires blockchain expertise, understanding of token standards, and metadata management. The transfer functionality and ownership verification add complexity to the implementation."
+    },
+    {
+      "taskId": 22,
+      "taskTitle": "Implement rights management system",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the subtasks for creating a rights management system including license framework, enforcement mechanisms, verification, access control integration, templates, audit trails, and analytics",
+      "reasoning": "Rights management involves complex legal and technical considerations, enforcement mechanisms, and integration with access control systems. The audit trail and analytics requirements add significant complexity."
+    },
+    {
+      "taskId": 23,
+      "taskTitle": "Develop SubQuery integration and indexing engine",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the SubQuery integration into subtasks covering project configuration, event handling, database schema design, query service deployment, metadata extraction, indexing pipeline, and batch processing",
+      "reasoning": "Indexing engines require efficient data processing, schema design, and query optimization. The integration with SubQuery and handling of updates and deletes adds complexity to the implementation."
+    },
+    {
+      "taskId": 24,
+      "taskTitle": "Implement search infrastructure and GraphQL API",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the subtasks for implementing search capabilities including full-text search, faceted filtering, relevance algorithms, query optimization, GraphQL schema, resolvers, pagination, and access control",
+      "reasoning": "Search infrastructure requires sophisticated indexing, relevance algorithms, and query optimization. The GraphQL API implementation with proper resolvers and access control adds significant complexity."
+    },
+    {
+      "taskId": 25,
+      "taskTitle": "Implement ActivityPub protocol and social graph",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the ActivityPub implementation into subtasks covering Actor model, activity types, federation protocol, HTTP signatures, relationship modeling, graph queries, privacy controls, and synchronization",
+      "reasoning": "ActivityPub implementation involves complex federation protocols, cryptographic signatures, and social graph management. The distributed nature and privacy requirements make this a challenging task."
+    },
+    {
+      "taskId": 26,
+      "taskTitle": "Develop content interaction and moderation system",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the subtasks for implementing content interactions including comment/like functionality, timeline generation, notifications, rate limiting, moderation tools, report handling, governance, and safety features",
+      "reasoning": "Content interaction systems require social features, moderation tools, and anti-abuse measures. The governance mechanisms and safety features add significant complexity to the implementation."
+    },
+    {
+      "taskId": 27,
+      "taskTitle": "Implement privacy-preserving analytics and telemetry",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the privacy-preserving analytics implementation into subtasks covering differential privacy, anonymous collection, consent management, data minimization, metrics infrastructure, logging pipelines, dashboards, and resource tracking",
+      "reasoning": "Privacy-preserving analytics involves sophisticated mathematical techniques like differential privacy, consent management, and data minimization practices. Balancing analytics value with privacy protection is challenging."
+    },
+    {
+      "taskId": 28,
+      "taskTitle": "Develop dual-mode wallet system",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Detail the subtasks for creating a dual-mode wallet including network-managed implementation, self-managed implementation, mode switching, consistency management, credential storage, structure management, access control, and recovery systems",
+      "reasoning": "Wallet systems require secure cryptographic operations, key management, and recovery mechanisms. The dual-mode approach with both network-managed and self-managed options significantly increases implementation complexity."
+    },
+    {
+      "taskId": 29,
+      "taskTitle": "Implement client SDKs and developer tools",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the SDK development into subtasks covering JavaScript/TypeScript implementation, React components, mobile SDKs, documentation, example applications, developer portal, development workflows, and security guidelines",
+      "reasoning": "Creating SDKs for multiple platforms requires expertise in various languages and frameworks. The comprehensive documentation, examples, and security guidelines add significant effort to the implementation."
+    },
+    {
+      "taskId": 30,
+      "taskTitle": "Perform security hardening and production deployment",
+      "complexityScore": 9,
+      "recommendedSubtasks": 7,
+      "expansionPrompt": "Detail the subtasks for security hardening and deployment including security audit, hardening implementation, performance optimization, containerization, Kubernetes configuration, monitoring setup, backup procedures, operations documentation, and deployment pipeline",
+      "reasoning": "Security hardening and production deployment involve comprehensive auditing, fixing vulnerabilities, and preparing for robust operations. The dependencies on all previous tasks and critical nature of security make this highly complex."
+    }
+  ]
+}
