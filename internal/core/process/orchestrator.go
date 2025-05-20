@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/blackhole/blackhole/internal/core/config"
 	"go.uber.org/zap"
 )
 
@@ -86,7 +87,7 @@ func WithExecutor(executor ProcessExecutor) OrchestratorOption {
 }
 
 // NewOrchestrator creates a new process orchestrator
-func NewOrchestrator(config *Config, options ...OrchestratorOption) (*Orchestrator, error) {
+func NewOrchestrator(config *config.Config, options ...OrchestratorOption) (*Orchestrator, error) {
 	// Extract orchestrator config from app config
 	orchestratorConfig := &OrchestratorConfig{
 		ServicesDir:     "/var/lib/blackhole/services",

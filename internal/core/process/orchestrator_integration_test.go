@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blackhole/blackhole/internal/core/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"

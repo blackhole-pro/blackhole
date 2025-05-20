@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blackhole/blackhole/internal/core/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -101,20 +102,20 @@ func (m *MockProcess) Kill() error {
 
 // MockConfigManager mocks the ConfigManager interface
 type MockConfigManager struct {
-	Config   *Config
-	GetFunc  func() *Config
-	SetFunc  func(*Config) error
+	Config   *config.Config
+	GetFunc  func() *config.Config
+	SetFunc  func(*config.Config) error
 	SaveFunc func() error
 }
 
-func (m *MockConfigManager) Get() *Config {
+func (m *MockConfigManager) Get() *config.Config {
 	if m.GetFunc != nil {
 		return m.GetFunc()
 	}
 	return m.Config
 }
 
-func (m *MockConfigManager) Set(cfg *Config) error {
+func (m *MockConfigManager) Set(cfg *config.Config) error {
 	if m.SetFunc != nil {
 		return m.SetFunc(cfg)
 	}
@@ -145,17 +146,17 @@ func setupTestDir(t *testing.T) string {
 }
 
 // createTestConfig creates a test configuration
-func createTestConfig(t *testing.T, tempDir string) *Config {
+func createTestConfig(t *testing.T, tempDir string) *config.Config {
 	// Create config
-	config := NewConfig()
-	config.Storage.DataDir = tempDir
+	cfg := config.NewConfig()
+	cfg.Storage.DataDir = tempDir
 	
 	// Set up service configurations
-	config.Services.Identity.Enabled = true
-	config.Services.Storage.Enabled = true
-	config.Services.Ledger.Enabled = true
+	cfg.Services.Identity.Enabled = true
+	cfg.Services.Storage.Enabled = true
+	cfg.Services.Ledger.Enabled = true
 	
-	return config
+	return cfg
 }
 
 // TestNewOrchestrator tests the creation of a new orchestrator
