@@ -8,23 +8,23 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/handcraftdev/blackhole/internal/core/config"
-	"github.com/handcraftdev/blackhole/internal/core/process/types"
+	"github.com/handcraftdev/blackhole/internal/core/config/types"
+	processtypes "github.com/handcraftdev/blackhole/internal/core/process/types"
 	"go.uber.org/zap"
 )
 
 // Manager handles service lifecycle operations
 type Manager struct {
-	services    map[string]*config.ServiceConfig
-	processes   map[string]*types.ServiceInfo
+	services    map[string]*types.ServiceConfig
+	processes   map[string]*ServiceProcess
 	processLock *sync.RWMutex
 	logger      *zap.Logger
 }
 
 // NewManager creates a new service lifecycle manager
 func NewManager(
-	services map[string]*config.ServiceConfig, 
-	processes map[string]*types.ServiceInfo,
+	services map[string]*types.ServiceConfig, 
+	processes map[string]*ServiceProcess,
 	processLock *sync.RWMutex,
 	logger *zap.Logger,
 ) *Manager {
@@ -57,7 +57,7 @@ func (m *Manager) StartService(name string, spawnFn func(string) error) error {
 	process, exists := m.processes[name]
 	m.processLock.RUnlock()
 	
-	if exists && process.State == string(types.ProcessStateRunning) {
+	if exists && process.State == processtypes.ProcessStateRunning {
 		m.logger.Info("Service already running", zap.String("service", name))
 		return nil
 	}
@@ -81,13 +81,13 @@ func (m *Manager) StopService(
 	}
 	
 	// Check if already stopped
-	if process.State == string(types.ProcessStateStopped) {
+	if process.State == processtypes.ProcessStateStopped {
 		m.processLock.Unlock()
 		return nil
 	}
 	
 	// Update status and get process info
-	process.State = string(types.ProcessStateStopped)
+	process.State = processtypes.ProcessStateStopped
 	stopCh := process.StopCh
 	pid := process.PID
 	m.processLock.Unlock()
@@ -162,7 +162,7 @@ func (m *Manager) RestartService(
 	m.processLock.Lock()
 	process, exists := m.processes[name]
 	if exists {
-		process.State = string(types.ProcessStateRestarting)
+		process.State = processtypes.ProcessStateRestarting
 	}
 	m.processLock.Unlock()
 	

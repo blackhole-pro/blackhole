@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/handcraftdev/blackhole/internal/core/config"
 	"github.com/handcraftdev/blackhole/internal/core/process/types"
 	"go.uber.org/zap"
 )

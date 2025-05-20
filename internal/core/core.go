@@ -4,8 +4,8 @@ package core
 import (
 	"context"
 
-	"github.com/handcraftdev/blackhole/internal/core/config"
-	"github.com/handcraftdev/blackhole/internal/core/process"
+	"github.com/handcraftdev/blackhole/internal/core/config/types"
+	processtypes "github.com/handcraftdev/blackhole/internal/core/process/types"
 )
 
 // Application is the main Blackhole application interface
@@ -37,26 +37,26 @@ type ProcessManager interface {
 	// StartAll starts all configured services
 	StartAll() error
 	
-	// Stop stops all services and shuts down the orchestrator
-	Stop() error
+	// StopAll stops all services and shuts down the orchestrator
+	StopAll() error
 	
 	// IsRunning checks if a service is running
 	IsRunning(name string) bool
 	
 	// GetServiceInfo returns information about a service
-	GetServiceInfo(name string) (*process.ServiceInfo, error)
+	GetServiceInfo(name string) (*processtypes.ServiceInfo, error)
 	
 	// GetAllServices returns information about all services
-	GetAllServices() (map[string]*process.ServiceInfo, error)
+	GetAllServices() (map[string]*processtypes.ServiceInfo, error)
 }
 
 // ConfigManager defines the interface for configuration management
 type ConfigManager interface {
 	// Get returns the current configuration
-	Get() *config.Config
+	Get() *types.Config
 	
 	// Set updates the configuration
-	Set(cfg *config.Config) error
+	Set(cfg *types.Config) error
 	
 	// Save persists the configuration to disk
 	Save() error

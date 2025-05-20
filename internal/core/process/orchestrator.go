@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/handcraftdev/blackhole/internal/core/config"
+	configtypes "github.com/handcraftdev/blackhole/internal/core/config/types"
 	"github.com/handcraftdev/blackhole/internal/core/process/executor"
 	"github.com/handcraftdev/blackhole/internal/core/process/isolation"
 	"github.com/handcraftdev/blackhole/internal/core/process/output"
@@ -55,8 +56,8 @@ type ServiceProcess struct {
 // Orchestrator manages service processes
 type Orchestrator struct {
 	// Configuration
-	config      *config.OrchestratorConfig
-	services    map[string]*config.ServiceConfig
+	config      *configtypes.OrchestratorConfig
+	services    map[string]*configtypes.ServiceConfig
 	
 	// Process tracking
 	processes   map[string]*ServiceProcess
@@ -143,7 +144,7 @@ func NewOrchestrator(configManager *config.ConfigManager, options ...Orchestrato
 	// Initialize orchestrator with configuration
 	o := &Orchestrator{
 		config:      &cfg.Orchestrator,
-		services:    make(map[string]*config.ServiceConfig),
+		services:    make(map[string]*configtypes.ServiceConfig),
 		processes:   make(map[string]*ServiceProcess),
 		doneCh:      make(chan struct{}),
 		executor:    executor.NewDefaultExecutor(),
@@ -187,7 +188,7 @@ func NewOrchestrator(configManager *config.ConfigManager, options ...Orchestrato
 	}
 	
 	// Subscribe to configuration changes
-	configManager.SubscribeToChanges(func(newConfig *config.Config) {
+	configManager.SubscribeToChanges(func(newConfig *configtypes.Config) {
 		o.handleConfigChange(newConfig)
 	})
 	
@@ -208,7 +209,7 @@ func (o *Orchestrator) SpawnProcess(name string) error {
 //
 // Parameters:
 //   - newConfig: The new configuration to apply
-func (o *Orchestrator) handleConfigChange(newConfig *config.Config) {
+func (o *Orchestrator) handleConfigChange(newConfig *configtypes.Config) {
 	o.processLock.Lock()
 	defer o.processLock.Unlock()
 	
@@ -236,7 +237,7 @@ func (o *Orchestrator) handleConfigChange(newConfig *config.Config) {
 	}
 	
 	// Update service configurations
-	o.services = make(map[string]*config.ServiceConfig)
+	o.services = make(map[string]*configtypes.ServiceConfig)
 	for name, svcCfg := range newConfig.Services {
 		o.services[name] = svcCfg
 	}

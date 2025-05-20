@@ -7,12 +7,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/handcraftdev/blackhole/internal/core/config"
-	"github.com/handcraftdev/blackhole/internal/core/process/types"
+	"github.com/handcraftdev/blackhole/internal/core/config/types"
+	processtypes "github.com/handcraftdev/blackhole/internal/core/process/types"
 )
 
 // Setup configures process isolation settings for a command
-func Setup(cmd types.ProcessCmd, serviceCfg *config.ServiceConfig) {
+func Setup(cmd processtypes.ProcessCmd, serviceCfg *types.ServiceConfig) {
 	// Set working directory if specified
 	if serviceCfg.DataDir != "" {
 		cmd.SetDir(serviceCfg.DataDir)

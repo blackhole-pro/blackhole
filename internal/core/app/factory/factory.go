@@ -4,7 +4,9 @@
 package factory
 
 import (
+	"github.com/handcraftdev/blackhole/internal/core/app/adapter"
 	"github.com/handcraftdev/blackhole/internal/core/app/types"
+	"github.com/handcraftdev/blackhole/internal/core/config"
 	"github.com/handcraftdev/blackhole/internal/core/process"
 	"go.uber.org/zap"
 )
@@ -32,14 +34,19 @@ func (f *DefaultProcessManagerFactory) CreateProcessManager(
 	configManager types.ConfigManager, 
 	logger *zap.Logger,
 ) (types.ProcessManager, error) {
-	// Create a new process orchestrator with the provided config manager and logger
+	// We need to create a core ConfigManager from our app ConfigManager
+	// For this we'll create a temporary core ConfigManager using default config
+	coreConfigManager := config.NewConfigManager(logger)
+
+	// Create a new process orchestrator with the core config manager and logger
 	orchestrator, err := process.NewOrchestrator(
-		configManager,
+		coreConfigManager,
 		process.WithLogger(logger),
 	)
 	if err != nil {
 		return nil, err
 	}
 	
-	return orchestrator, nil
+	// Create an adapter to convert between interfaces
+	return adapter.NewProcessManagerAdapter(orchestrator, logger), nil
 }

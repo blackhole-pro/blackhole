@@ -5,6 +5,7 @@ package app
 import (
 	"sync"
 
+	"github.com/handcraftdev/blackhole/internal/core/app/adapter"
 	"github.com/handcraftdev/blackhole/internal/core/app/factory"
 	"github.com/handcraftdev/blackhole/internal/core/app/types"
 	"github.com/handcraftdev/blackhole/internal/core/config"
@@ -14,9 +15,10 @@ import (
 // Application represents the main application instance implementing the types.Application interface
 type Application struct {
 	// Core components
-	logger         *zap.Logger
-	configManager  *config.ConfigManager
-	processManager types.ProcessManager
+	logger                *zap.Logger
+	coreConfigManager     *config.ConfigManager
+	configManagerAdapter  types.ConfigManager
+	processManager        types.ProcessManager
 	
 	// Factories
 	processManagerFactory types.ProcessManagerFactory
@@ -44,7 +46,9 @@ func WithLogger(logger *zap.Logger) ApplicationOption {
 // WithConfigManager sets a custom config manager for the application
 func WithConfigManager(configManager *config.ConfigManager) ApplicationOption {
 	return func(a *Application) {
-		a.configManager = configManager
+		a.coreConfigManager = configManager
+		// Create a new adapter with the custom core config manager
+		a.configManagerAdapter = adapter.NewConfigManagerAdapter(configManager, a.logger)
 	}
 }
 
@@ -75,12 +79,16 @@ func NewApplication(options ...ApplicationOption) (*Application, error) {
 	}
 	
 	// Create a default config manager
-	configManager := config.NewConfigManager(logger)
+	coreConfigManager := config.NewConfigManager(logger)
+	
+	// Create config manager adapter
+	configManagerAdapter := adapter.NewConfigManagerAdapter(coreConfigManager, logger)
 	
 	// Create the application
 	app := &Application{
 		logger:                logger,
-		configManager:         configManager,
+		coreConfigManager:     coreConfigManager,
+		configManagerAdapter:  configManagerAdapter,
 		doneCh:                make(chan struct{}),
 		services:              make(map[string]types.Service),
 		processManagerFactory: factory.NewDefaultProcessManagerFactory(),
@@ -132,7 +140,7 @@ func (a *Application) Start() error {
 	
 	// Create process manager using the factory
 	processManager, err := a.processManagerFactory.CreateProcessManager(
-		a.configManager,
+		a.configManagerAdapter,
 		a.logger,
 	)
 	if err != nil {
@@ -212,7 +220,7 @@ func (a *Application) GetProcessManager() types.ProcessManager {
 
 // GetConfigManager returns the configuration manager
 func (a *Application) GetConfigManager() types.ConfigManager {
-	return a.configManager
+	return a.configManagerAdapter
 }
 
 // GetService returns a service by name

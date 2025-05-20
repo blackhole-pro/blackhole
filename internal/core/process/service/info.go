@@ -7,21 +7,34 @@ import (
 	"sync"
 	"time"
 
-	"github.com/handcraftdev/blackhole/internal/core/config"
-	"github.com/handcraftdev/blackhole/internal/core/process/types"
+	"github.com/handcraftdev/blackhole/internal/core/config/types"
+	processtypes "github.com/handcraftdev/blackhole/internal/core/process/types"
 )
 
 // InfoProvider retrieves information about services
 type InfoProvider struct {
-	services    map[string]*config.ServiceConfig
-	processes   map[string]*types.ServiceInfo
+	services    map[string]*types.ServiceConfig
+	processes   map[string]*ServiceProcess
 	processLock *sync.RWMutex
+}
+
+// ServiceProcess represents a running service process with state management
+type ServiceProcess struct {
+	Name        string
+	Command     processtypes.ProcessCmd
+	CommandWait func() error
+	PID         int
+	State       processtypes.ProcessState
+	Started     time.Time
+	Restarts    int
+	LastError   error
+	StopCh      chan struct{}
 }
 
 // NewInfoProvider creates a new service information provider
 func NewInfoProvider(
-	services map[string]*config.ServiceConfig, 
-	processes map[string]*types.ServiceInfo,
+	services map[string]*types.ServiceConfig, 
+	processes map[string]*ServiceProcess,
 	processLock *sync.RWMutex,
 ) *InfoProvider {
 	return &InfoProvider{
@@ -32,7 +45,7 @@ func NewInfoProvider(
 }
 
 // GetServiceInfo returns diagnostic information about a specific service
-func (p *InfoProvider) GetServiceInfo(name string) (*types.ServiceInfo, error) {
+func (p *InfoProvider) GetServiceInfo(name string) (*processtypes.ServiceInfo, error) {
 	p.processLock.RLock()
 	defer p.processLock.RUnlock()
 	
@@ -45,20 +58,20 @@ func (p *InfoProvider) GetServiceInfo(name string) (*types.ServiceInfo, error) {
 	// Get process info if running
 	process, exists := p.processes[name]
 	if !exists {
-		return &types.ServiceInfo{
+		return &processtypes.ServiceInfo{
 			Name:       name,
 			Configured: true,
 			Enabled:    serviceCfg.Enabled,
-			State:      string(types.ProcessStateStopped),
+			State:      string(processtypes.ProcessStateStopped),
 		}, nil
 	}
 	
 	// Build service info
-	info := &types.ServiceInfo{
+	info := &processtypes.ServiceInfo{
 		Name:       name,
 		Configured: true,
 		Enabled:    serviceCfg.Enabled,
-		State:      process.State,
+		State:      string(process.State),
 		PID:        process.PID,
 		Uptime:     time.Since(process.Started),
 		Restarts:   process.Restarts,
@@ -73,24 +86,24 @@ func (p *InfoProvider) GetServiceInfo(name string) (*types.ServiceInfo, error) {
 }
 
 // GetAllServices returns information about all configured services
-func (p *InfoProvider) GetAllServices() (map[string]*types.ServiceInfo, error) {
+func (p *InfoProvider) GetAllServices() (map[string]*processtypes.ServiceInfo, error) {
 	p.processLock.RLock()
 	defer p.processLock.RUnlock()
 	
-	services := make(map[string]*types.ServiceInfo)
+	services := make(map[string]*processtypes.ServiceInfo)
 	
 	// Add all configured services
 	for name, cfg := range p.services {
-		info := &types.ServiceInfo{
+		info := &processtypes.ServiceInfo{
 			Name:       name,
 			Configured: true,
 			Enabled:    cfg.Enabled,
-			State:      string(types.ProcessStateStopped),
+			State:      string(processtypes.ProcessStateStopped),
 		}
 		
 		// Add process info if running
 		if process, exists := p.processes[name]; exists {
-			info.State = process.State
+			info.State = string(process.State)
 			info.PID = process.PID
 			info.Uptime = time.Since(process.Started)
 			info.Restarts = process.Restarts
