@@ -4,8 +4,8 @@ package core
 import (
 	"context"
 
-	"github.com/blackhole/blackhole/internal/core/config"
-	"github.com/blackhole/blackhole/internal/core/process"
+	"blackhole/internal/core/config"
+	"blackhole/internal/core/process"
 )
 
 // Application is the main Blackhole application interface

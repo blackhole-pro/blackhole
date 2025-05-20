@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/blackhole/blackhole/internal/core/config"
+	"blackhole/internal/core/config"
 	"go.uber.org/zap"
 )
 

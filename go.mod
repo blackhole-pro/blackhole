@@ -1,4 +1,4 @@
-module github.com/blackhole/blackhole
+module blackhole
 
 go 1.21
 
