@@ -83,7 +83,7 @@ proto:
 .PHONY: dev
 dev:
 	@echo "Starting development mode..."
-	air
+	$(HOME)/go/bin/air
 
 # Cross-compilation
 .PHONY: build-all

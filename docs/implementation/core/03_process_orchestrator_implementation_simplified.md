@@ -31,7 +31,7 @@ The simplified implementation follows these design principles:
 ```go
 // Import Configuration System types
 import (
-    "github.com/blackhole/pkg/config"
+    "github.com/handcraftdev/blackhole/pkg/config"
 )
 
 // ProcessState represents the state of a service process

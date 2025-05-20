@@ -1,15 +1,17 @@
+// Package identity implements the identity service which provides
+// authentication, credentials, and decentralized identity functionality.
 package identity
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 // Service implements the identity service
 type Service struct {
-	logger *logrus.Logger
+	logger *zap.Logger
 	config Config
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -23,9 +25,12 @@ type Config struct {
 }
 
 // NewService creates a new identity service
-func NewService(logger *logrus.Logger, config Config) *Service {
+func NewService(logger *zap.Logger, config Config) *Service {
+	// Create scoped logger for this service
+	serviceLogger := logger.With(zap.String("service", "identity"))
+	
 	return &Service{
-		logger: logger.WithField("service", "identity").Logger,
+		logger: serviceLogger,
 		config: config,
 	}
 }
@@ -36,7 +41,9 @@ func (s *Service) Start(ctx context.Context) error {
 	s.logger.Info("Starting identity service")
 	
 	// Initialize identity service components
-	// TODO: Implement identity service initialization
+	if err := s.initialize(); err != nil {
+		return fmt.Errorf("failed to initialize identity service: %w", err)
+	}
 	
 	// Start service loop
 	go s.run()
@@ -53,7 +60,9 @@ func (s *Service) Stop() error {
 	}
 	
 	// Cleanup resources
-	// TODO: Implement cleanup
+	if err := s.cleanup(); err != nil {
+		return fmt.Errorf("error during identity service cleanup: %w", err)
+	}
 	
 	return nil
 }
@@ -65,12 +74,34 @@ func (s *Service) Name() string {
 
 // Health returns the health status of the service
 func (s *Service) Health() bool {
-	// TODO: Implement health check
+	// TODO: Implement proper health check
 	return true
+}
+
+// initialize prepares the service for operation
+func (s *Service) initialize() error {
+	s.logger.Debug("Initializing identity service",
+		zap.Int("max_cache_size", s.config.MaxCacheSize),
+		zap.Bool("enable_dids", s.config.EnableDIDs))
+	
+	// TODO: Initialize service components
+	
+	return nil
+}
+
+// cleanup performs service shutdown tasks
+func (s *Service) cleanup() error {
+	s.logger.Debug("Cleaning up identity service resources")
+	
+	// TODO: Implement cleanup
+	
+	return nil
 }
 
 // run is the main service loop
 func (s *Service) run() {
+	s.logger.Debug("Identity service main loop started")
+	
 	for {
 		select {
 		case <-s.ctx.Done():

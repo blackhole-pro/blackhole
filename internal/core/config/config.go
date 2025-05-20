@@ -1,9 +1,11 @@
+// Package config provides configuration management functionality
 package config
 
 import (
 	"fmt"
-	"sync"
+	"strings"
 
+	"github.com/handcraftdev/blackhole/internal/core/config/types"
 	"github.com/spf13/viper"
 )
 
@@ -12,158 +14,123 @@ var (
 	Version   = "dev"
 	Commit    = "unknown"
 	BuildTime = "unknown"
-	
-	// Global config instance
-	globalConfig *Config
-	configOnce   sync.Once
 )
 
-// Config represents the application configuration
-type Config struct {
-	// Server configuration
-	Server ServerConfig `mapstructure:"server"`
-	
-	// Service configurations
-	Services ServicesConfig `mapstructure:"services"`
-	
-	// Storage configuration
-	Storage StorageConfig `mapstructure:"storage"`
-	
-	// Network configuration
-	Network NetworkConfig `mapstructure:"network"`
-	
-	// Security configuration
-	Security SecurityConfig `mapstructure:"security"`
+// NewDefaultConfig creates a new configuration with default values
+func NewDefaultConfig() *types.Config {
+	return &types.Config{
+		Server: types.ServerConfig{
+			HTTPAddr: ":8080",
+			GRPCAddr: ":9090",
+			LogLevel: "info",
+		},
+		Services: make(types.ServicesConfig),
+		Storage: types.StorageConfig{
+			DataDir:   "/var/lib/blackhole",
+			CacheSize: 1024 * 1024 * 1024, // 1GB
+		},
+		Network: types.NetworkConfig{
+			P2PEnabled: true,
+		},
+		Orchestrator: types.OrchestratorConfig{
+			ServicesDir:     "/var/lib/blackhole/services",
+			SocketDir:       "/var/run/blackhole",
+			LogLevel:        "info",
+			AutoRestart:     true,
+			ShutdownTimeout: 30,
+		},
+	}
 }
 
-// ServerConfig contains server-related configuration
-type ServerConfig struct {
-	HTTPAddr  string `mapstructure:"http_addr"`
-	GRPCAddr  string `mapstructure:"grpc_addr"`
-	LogLevel  string `mapstructure:"log_level"`
-	EnableTLS bool   `mapstructure:"enable_tls"`
+// FileLoader loads configuration from a file
+type FileLoader struct {
+	path string
 }
 
-// ServicesConfig contains service-specific configurations
-type ServicesConfig struct {
-	Identity  ServiceConfig `mapstructure:"identity"`
-	Storage   ServiceConfig `mapstructure:"storage"`
-	Ledger    ServiceConfig `mapstructure:"ledger"`
-	Indexer   ServiceConfig `mapstructure:"indexer"`
-	Social    ServiceConfig `mapstructure:"social"`
-	Analytics ServiceConfig `mapstructure:"analytics"`
-	Telemetry ServiceConfig `mapstructure:"telemetry"`
+// NewFileLoader creates a new file loader
+func NewFileLoader(path string) *FileLoader {
+	return &FileLoader{path: path}
 }
 
-// ServiceConfig contains common service configuration
-type ServiceConfig struct {
-	Enabled    bool              `mapstructure:"enabled"`
-	MaxWorkers int               `mapstructure:"max_workers"`
-	Timeout    string            `mapstructure:"timeout"`
-	Options    map[string]string `mapstructure:"options"`
-}
-
-// StorageConfig contains storage-related configuration
-type StorageConfig struct {
-	IPFSEndpoint     string `mapstructure:"ipfs_endpoint"`
-	FilecoinEndpoint string `mapstructure:"filecoin_endpoint"`
-	DataDir          string `mapstructure:"data_dir"`
-	CacheSize        int64  `mapstructure:"cache_size"`
-}
-
-// NetworkConfig contains networking configuration
-type NetworkConfig struct {
-	P2PEnabled   bool     `mapstructure:"p2p_enabled"`
-	BootstrapNodes []string `mapstructure:"bootstrap_nodes"`
-	ListenAddrs  []string `mapstructure:"listen_addrs"`
-	EnableRelay  bool     `mapstructure:"enable_relay"`
-}
-
-// SecurityConfig contains security-related configuration
-type SecurityConfig struct {
-	TLSCertFile string `mapstructure:"tls_cert_file"`
-	TLSKeyFile  string `mapstructure:"tls_key_file"`
-	JWTSecret   string `mapstructure:"jwt_secret"`
-	EnableAuth  bool   `mapstructure:"enable_auth"`
-}
-
-// NewConfig creates a new configuration instance
-func NewConfig() *Config {
-	configOnce.Do(func() {
-		globalConfig = &Config{
-			Server: ServerConfig{
-				HTTPAddr: ":8080",
-				GRPCAddr: ":9090",
-				LogLevel: "info",
-			},
-			Services: ServicesConfig{
-				Identity:  ServiceConfig{Enabled: true},
-				Storage:   ServiceConfig{Enabled: true},
-				Ledger:    ServiceConfig{Enabled: true},
-				Indexer:   ServiceConfig{Enabled: true},
-				Social:    ServiceConfig{Enabled: true},
-				Analytics: ServiceConfig{Enabled: true},
-				Telemetry: ServiceConfig{Enabled: true},
-			},
-			Storage: StorageConfig{
-				DataDir:   "/var/lib/blackhole",
-				CacheSize: 1024 * 1024 * 1024, // 1GB
-			},
-			Network: NetworkConfig{
-				P2PEnabled: true,
-			},
-		}
-	})
-	return globalConfig
-}
-
-// GetConfig returns the global configuration instance
-func GetConfig() *Config {
-	return NewConfig()
-}
-
-// Load loads configuration from various sources
-func (c *Config) Load() error {
+// Load loads configuration from a file
+func (l *FileLoader) Load() (*types.Config, error) {
 	v := viper.New()
 	
 	// Set config name and paths
-	v.SetConfigName("blackhole")
-	v.SetConfigType("yaml")
-	v.AddConfigPath("/etc/blackhole")
-	v.AddConfigPath("$HOME/.blackhole")
-	v.AddConfigPath(".")
-	v.AddConfigPath("./configs")
+	if l.path != "" {
+		v.SetConfigFile(l.path)
+	} else {
+		v.SetConfigName("blackhole")
+		v.SetConfigType("yaml")
+		v.AddConfigPath("/etc/blackhole")
+		v.AddConfigPath("$HOME/.blackhole")
+		v.AddConfigPath(".")
+		v.AddConfigPath("./configs")
+	}
 	
 	// Set environment variable prefix
 	v.SetEnvPrefix("BLACKHOLE")
 	v.AutomaticEnv()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	
-	// Set defaults
-	v.SetDefault("server.http_addr", ":8080")
-	v.SetDefault("server.grpc_addr", ":9090")
-	v.SetDefault("server.log_level", "info")
-	v.SetDefault("storage.data_dir", "/var/lib/blackhole")
-	
-	// Try to read config file
+	// Read config file
 	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return fmt.Errorf("failed to read config file: %w", err)
+			return nil, fmt.Errorf("failed to read config file: %w", err)
 		}
 		// Config file not found; use defaults
 	}
 	
-	// Unmarshal into struct
-	if err := v.Unmarshal(c); err != nil {
-		return fmt.Errorf("failed to unmarshal config: %w", err)
+	// Create new config with defaults
+	config := NewDefaultConfig()
+	
+	// Unmarshal into config struct
+	if err := v.Unmarshal(config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+	
+	return config, nil
+}
+
+// FileWriter writes configuration to a file
+type FileWriter struct {
+	path string
+}
+
+// NewFileWriter creates a new file writer
+func NewFileWriter(path string) *FileWriter {
+	return &FileWriter{path: path}
+}
+
+// Write writes configuration to a file
+func (w *FileWriter) Write(config *types.Config) error {
+	v := viper.New()
+	
+	// Set config file
+	v.SetConfigFile(w.path)
+	
+	// Convert to map
+	configMap := make(map[string]interface{})
+	v.MergeConfigMap(configMap)
+	
+	// Set all config values
+	v.Set("server", config.Server)
+	v.Set("services", config.Services)
+	v.Set("storage", config.Storage)
+	v.Set("network", config.Network)
+	v.Set("security", config.Security)
+	v.Set("orchestrator", config.Orchestrator)
+	
+	// Write config file
+	if err := v.WriteConfig(); err != nil {
+		return fmt.Errorf("failed to write config file: %w", err)
 	}
 	
 	return nil
 }
 
-// Validate validates the configuration
-func ValidateConfig() error {
-	config := GetConfig()
-	
+// ValidateConfig validates the provided configuration
+func ValidateConfig(config *types.Config) error {
 	// Validate server config
 	if config.Server.HTTPAddr == "" {
 		return fmt.Errorf("server.http_addr cannot be empty")
@@ -175,6 +142,14 @@ func ValidateConfig() error {
 	// Validate storage config
 	if config.Storage.DataDir == "" {
 		return fmt.Errorf("storage.data_dir cannot be empty")
+	}
+	
+	// Validate orchestrator config
+	if config.Orchestrator.ServicesDir == "" {
+		return fmt.Errorf("orchestrator.services_dir cannot be empty")
+	}
+	if config.Orchestrator.ShutdownTimeout <= 0 {
+		return fmt.Errorf("orchestrator.shutdown_timeout must be positive")
 	}
 	
 	return nil

@@ -1,0 +1,32 @@
+# .air.toml file for hot reloading the Blackhole project
+
+root = "."
+tmp_dir = "tmp"
+
+[build]
+# Binary file produced by go build
+bin = "./bin/blackhole"
+cmd = "go build -o ./bin/blackhole ./cmd/blackhole"
+# Watch these directories for changes
+include_ext = ["go", "yaml", "yml"]
+exclude_dir = ["tmp", "vendor", ".git", "bin", "build", "docs", "tasks", "test"]
+# Execute the binary after build
+full_bin = "./bin/blackhole"
+# Stop running process before building
+kill_delay = "0s"
+# Keep the binary running
+delay = 1000 # milliseconds
+# Send interrupt signal before killing process (linux and macos only)
+send_interrupt = true
+
+[log]
+time = true
+
+[color]
+main = "magenta"
+watcher = "cyan"
+build = "yellow"
+runner = "green"
+
+[misc]
+clean_on_exit = true

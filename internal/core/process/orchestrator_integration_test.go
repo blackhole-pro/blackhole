@@ -1,3 +1,5 @@
+// Package process provides the implementation of the process orchestrator
+// which manages service processes for the Blackhole platform.
 package process
 
 import (
@@ -8,7 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"blackhole/internal/core/config"
+	"github.com/handcraftdev/blackhole/internal/core/config"
+	"github.com/handcraftdev/blackhole/internal/core/config/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -22,24 +25,16 @@ func TestOrchestrator_Integration(t *testing.T) {
 	
 	// Setup test directory
 	tempDir := setupTestDir(t)
-	config := createTestConfig(t, tempDir)
-	
-	// Create test logger
-	logger := zaptest.NewLogger(t)
-	
-	// Set services directory in config
-	config.Storage.DataDir = tempDir
+	testConfig := createTestConfig(t, tempDir)
+	configManager := config.NewConfigManager(zaptest.NewLogger(t))
+	require.NoError(t, configManager.SetConfig(testConfig))
 	
 	// Create test service binaries
 	successBin := buildTestBinary(t, tempDir, "success", 0)
 	failureBin := buildTestBinary(t, tempDir, "failure", 1)
 	
-	// Configure services
-	config.Services.Identity.Enabled = true
-	config.Services.Storage.Enabled = true
-	
 	// Create orchestrator
-	orch, err := NewOrchestrator(config, WithLogger(logger))
+	orch, err := NewOrchestrator(configManager, WithLogger(zaptest.NewLogger(t)))
 	require.NoError(t, err)
 	
 	// Override auto-restart timeout for faster testing
@@ -52,11 +47,13 @@ func TestOrchestrator_Integration(t *testing.T) {
 	// Test starting a successful service
 	t.Run("StartSuccessService", func(t *testing.T) {
 		// Add success service to services map
-		orch.services["success"] = &ServiceConfig{
+		orch.processLock.Lock()
+		orch.services["success"] = &types.ServiceConfig{
 			Enabled:    true,
 			BinaryPath: successBin,
 			DataDir:    filepath.Join(tempDir, "services", "success", "data"),
 		}
+		orch.processLock.Unlock()
 		
 		// Create data directory
 		err := os.MkdirAll(filepath.Join(tempDir, "services", "success", "data"), 0755)
@@ -88,18 +85,18 @@ func TestOrchestrator_Integration(t *testing.T) {
 	// Test service that fails and gets restarted
 	t.Run("RestartFailingService", func(t *testing.T) {
 		// Add failure service to services map
-		orch.services["failure"] = &ServiceConfig{
+		orch.processLock.Lock()
+		orch.services["failure"] = &types.ServiceConfig{
 			Enabled:    true,
 			BinaryPath: failureBin,
 			DataDir:    filepath.Join(tempDir, "services", "failure", "data"),
 		}
+		orch.config.AutoRestart = true
+		orch.processLock.Unlock()
 		
 		// Create data directory
 		err := os.MkdirAll(filepath.Join(tempDir, "services", "failure", "data"), 0755)
 		require.NoError(t, err)
-		
-		// Enable auto-restart
-		orch.config.AutoRestart = true
 		
 		// Start service
 		err = orch.StartService("failure")
@@ -107,7 +104,7 @@ func TestOrchestrator_Integration(t *testing.T) {
 		
 		// Wait for it to fail and attempt restart (up to 2 seconds)
 		deadline := time.Now().Add(2 * time.Second)
-		var info *ServiceInfo
+		var info *types.ServiceInfo
 		restartOccurred := false
 		
 		for time.Now().Before(deadline) {
@@ -164,6 +161,40 @@ func TestOrchestrator_Integration(t *testing.T) {
 			}
 		}
 	})
+}
+
+// setupTestDir creates a temporary directory structure for tests
+func setupTestDir(t *testing.T) string {
+	tempDir := t.TempDir()
+	
+	// Create services directory
+	servicesDir := filepath.Join(tempDir, "services")
+	err := os.MkdirAll(servicesDir, 0755)
+	require.NoError(t, err)
+	
+	// Create sockets directory
+	socketsDir := filepath.Join(tempDir, "sockets")
+	err = os.MkdirAll(socketsDir, 0755)
+	require.NoError(t, err)
+	
+	return tempDir
+}
+
+// createTestConfig creates a test configuration with the given temporary directory
+func createTestConfig(t *testing.T, tempDir string) *types.Config {
+	cfg := config.NewDefaultConfig()
+	
+	// Update paths to use the test directory
+	cfg.Orchestrator.ServicesDir = filepath.Join(tempDir, "services")
+	cfg.Orchestrator.SocketDir = filepath.Join(tempDir, "sockets")
+	cfg.Orchestrator.LogLevel = "debug"
+	cfg.Orchestrator.AutoRestart = true
+	cfg.Orchestrator.ShutdownTimeout = 5
+	
+	// Create initial services map
+	cfg.Services = make(types.ServicesConfig)
+	
+	return cfg
 }
 
 // buildTestBinary creates a test binary

@@ -10,24 +10,12 @@ import (
 	"go.uber.org/zap"
 )
 
-// Service interface that all services must implement
-type Service interface {
-	Start() error
-	Stop() error
-	Name() string
-	Health() bool
-}
-
 // Application represents the main blackhole application
 type Application struct {
 	// Core components
 	logger         *zap.Logger
 	configManager  *config.ConfigManager
 	processManager *process.Orchestrator
-	
-	// Service registry
-	services       map[string]Service
-	servicesMutex  sync.RWMutex
 	
 	// Synchronization
 	mu       sync.RWMutex
@@ -52,18 +40,7 @@ func NewApplication() *Application {
 		logger:        logger,
 		configManager: configManager,
 		doneCh:        make(chan struct{}),
-		services:      make(map[string]Service),
 	}
-}
-
-// RegisterService registers a service with the application
-func (a *Application) RegisterService(service Service) error {
-	a.servicesMutex.Lock()
-	defer a.servicesMutex.Unlock()
-	
-	a.services[service.Name()] = service
-	a.logger.Info("Service registered", zap.String("service", service.Name()))
-	return nil
 }
 
 // Start starts the application
@@ -137,11 +114,32 @@ func (a *Application) GetConfigManager() core.ConfigManager {
 	return a.configManager
 }
 
-// GetService returns a service by name
-func (a *Application) GetService(name string) (Service, bool) {
-	a.servicesMutex.RLock()
-	defer a.servicesMutex.RUnlock()
-	
-	service, exists := a.services[name]
-	return service, exists
+// ApplicationAdapter adapts app.Application to core.Application
+type ApplicationAdapter struct {
+	app *Application
+}
+
+// NewApplicationAdapter creates a new ApplicationAdapter
+func NewApplicationAdapter(app *Application) *ApplicationAdapter {
+	return &ApplicationAdapter{app: app}
+}
+
+// Start implements core.Application.Start
+func (a *ApplicationAdapter) Start() error {
+	return a.app.Start()
+}
+
+// Stop implements core.Application.Stop
+func (a *ApplicationAdapter) Stop() error {
+	return a.app.Stop()
+}
+
+// GetProcessManager implements core.Application.GetProcessManager
+func (a *ApplicationAdapter) GetProcessManager() core.ProcessManager {
+	return a.app.GetProcessManager()
+}
+
+// GetConfigManager implements core.Application.GetConfigManager
+func (a *ApplicationAdapter) GetConfigManager() core.ConfigManager {
+	return a.app.GetConfigManager()
 }
