@@ -39,30 +39,42 @@ This document outlines the development guidelines and best practices for the Bla
 Major components should follow a subdirectory-based organization for clear separation of concerns:
 
 ```
-internal/[component]/
-├── types/                 # All interface and type definitions
-│   ├── types.go           # Core type definitions
-│   ├── errors.go          # Error type definitions
-│   └── info.go            # Information type definitions
+# Project Structure
+
+blackhole/
+├── cmd/                   # Command line applications
+│   └── blackhole/         # Main binary entry point
 │
-├── [component].go         # Main struct definition and initialization
+├── internal/              # Private application code
+│   ├── [component]/       # A logical component
+│   │   ├── types/         # All interface and type definitions
+│   │   │   ├── types.go   # Core type definitions
+│   │   │   └── errors.go  # Error type definitions
+│   │   │
+│   │   ├── [component].go # Main struct definition and initialization
+│   │   │
+│   │   ├── [feature1]/    # Feature-specific functionality
+│   │   │   └── feature1.go # Main feature implementation
+│   │   │
+│   │   └── utils/         # Shared utilities
+│   │       └── helpers.go # Helper functions
+│   │
+│   └── services/          # Service implementations
 │
-├── [feature1]/            # Feature-specific functionality
-│   ├── feature1.go        # Main feature implementation
-│   └── helpers.go         # Helper functions for the feature
+├── pkg/                   # Public packages
+│   ├── api/               # Public API clients
+│   └── sdk/               # SDK for developers
 │
-├── [feature2]/            # Another feature set
-│   ├── [subfeature1].go   # Subfeature implementation
-│   └── [subfeature2].go   # Another subfeature implementation
-│
-├── utils/                 # Shared utilities
-│   ├── [utility1].go      # Utility function set 1
-│   └── [utility2].go      # Utility function set 2
-│
-└── testing/               # Testing utilities
-    ├── mocks.go           # Mock implementations
-    ├── fixtures.go        # Test fixtures
-    └── helpers.go         # Test helper functions
+└── test/                  # All tests
+    ├── unit/              # Unit tests
+    │   └── [component]/   # Mirrors internal structure
+    │       └── [component]_test.go
+    │
+    ├── integration/       # Integration tests
+    │   └── [feature]_test.go
+    │
+    └── fixtures/          # Shared test fixtures
+        └── [fixture].go
 ```
 
 ## Package Organization
@@ -351,29 +363,53 @@ func (s *Storage) DeleteContent(ctx context.Context, id string) error {
 
 ### Rules
 
-1. **Dedicated Test Directories**: Use a clear directory structure for different test types
-2. **Interface Mocking**: Use interfaces from types/ package to create mocks for testing
-3. **Table-Driven Tests**: Use table-driven tests for testing multiple scenarios
-4. **Test Coverage**: Aim for at least 80% test coverage for each package
+1. **Strict Test Separation**: All tests MUST be placed in the dedicated `/test` directory, never alongside source code
+2. **Dedicated Test Directories**: Use a clear directory structure for different test types (unit, integration, etc.)
+3. **Mirror Directory Structure**: Tests in `/test/unit/` must mirror the internal source structure
+4. **Interface Mocking**: Use interfaces from types/ package to create mocks for testing
+5. **Table-Driven Tests**: Use table-driven tests for testing multiple scenarios
+6. **Test Coverage**: Aim for at least 80% test coverage for each package
 
 ### Test Directory Structure
 
 ```
 blackhole/
-├── internal/
-│   └── core/
-│       ├── app/
-│       │   ├── app.go                  # Source code
-│       │   └── app_test.go             # Unit tests
-│       └── process/
-│           ├── orchestrator.go         # Source code
-│           └── orchestrator_test.go    # Unit tests
+├── cmd/                                # Command line applications
+│   └── blackhole/                      # Main binary entry point
 │
-└── test/                               # Top-level test directory
-    ├── unit/                           # Specialized unit tests
-    │   └── core/                       # Mirrors internal structure
-    │       └── app/
-    │           └── app_advanced_test.go
+├── internal/                           # Private application code
+│   ├── core/                           # Core runtime components
+│   │   ├── app/                        # Application component
+│   │   │   └── app.go                  # Application implementation
+│   │   ├── process/                    # Process management
+│   │   │   └── orchestrator.go         # Orchestrator implementation
+│   │   └── config/                     # Configuration system
+│   │       └── config.go               # Config implementation
+│   │
+│   └── services/                       # Service implementations
+│       ├── identity/                   # Identity service
+│       ├── storage/                    # Storage service
+│       └── node/                       # Node service
+│
+├── pkg/                                # Public packages
+│   ├── api/                            # Public API clients
+│   └── sdk/                            # SDK for developers
+│
+└── test/                               # All tests strictly here
+    ├── unit/                           # Unit tests
+    │   ├── core/                       # Mirrors internal structure
+    │   │   ├── app/                    
+    │   │   │   └── app_test.go         # App unit tests
+    │   │   ├── process/                
+    │   │   │   └── orchestrator_test.go # Orchestrator unit tests
+    │   │   └── config/                 
+    │   │       └── config_test.go      # Config unit tests
+    │   │
+    │   └── services/                   # Service tests
+    │       ├── identity/               
+    │       │   └── identity_test.go    # Identity unit tests
+    │       └── storage/
+    │           └── storage_test.go     # Storage unit tests
     │
     ├── integration/                    # Integration tests
     │   ├── app_adapter_test.go         # Cross-component tests
@@ -381,6 +417,10 @@ blackhole/
     │   └── test-service/               # Test service fixtures
     │       ├── main.go                 # Test service implementation
     │       └── go.mod                  # Service module definition
+    │
+    ├── functional/                     # Functional tests
+    │   └── api/
+    │       └── api_test.go             # API level tests
     │
     ├── performance/                    # Performance tests
     │   └── benchmarks/
@@ -394,9 +434,10 @@ blackhole/
 ### Test Types
 
 1. **Unit Tests**: 
-   - Located alongside source code with `_test.go` suffix
+   - Located in the `/test/unit/` directory, mirroring the internal structure
    - Test individual functions and methods in isolation
    - Focus on function/method behavior with mocked dependencies
+   - All unit tests must be in the dedicated test directory, not alongside code
 
 2. **Integration Tests**:
    - Located in the `/test/integration/` directory
@@ -418,7 +459,7 @@ blackhole/
 ### Example Unit Test
 
 ```go
-// In internal/core/storage/storage_test.go
+// In test/unit/services/storage/storage_test.go
 func TestStorage_StoreContent(t *testing.T) {
     tests := []struct {
         name        string
