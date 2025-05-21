@@ -435,6 +435,43 @@ Working on implementing the Blackhole distributed content sharing platform with 
    - Next up: Begin coding the Process Orchestrator and Configuration System
 
 
+## Latest Updates (5/21/2025 - Afternoon)
+
+### Standardized Test Directory Structure and Updated Development Guidelines
+1. ✅ Formalized dedicated test directory pattern as a project standard:
+   - Updated development guidelines with structured test organization
+   - Documented dedicated test directory approach in development_guidelines.md
+   - Added section on test directory structure with examples
+   - Created clear distinction between unit and integration tests
+   - Updated Makefile documentation with test execution commands
+   - Enhanced CI/CD configuration examples with separate test stages
+   - Provided concrete examples for all test types
+2. Progress Update:
+   - Development guidelines now include comprehensive test organization structure
+   - Clear standards for unit tests alongside source code
+   - Integration tests in dedicated test/integration/ directory
+   - Updated test execution commands properly documented
+   - All tests properly organized based on type and scope
+   - Next up: Implement and test Configuration System
+
+### Implemented Integration Tests for App Adapter and Service Discovery
+1. ✅ Created comprehensive integration test framework:
+   - Set up structured integration test directory in test/integration/
+   - Created test service for integration testing with proper signal handling
+   - Implemented adapter pattern testing with app factory
+   - Added comprehensive service discovery testing
+   - Created test cases for service lifecycle management through the adapter
+   - Added detailed documentation for running integration tests
+   - Updated Makefile with dedicated integration test targets
+2. Progress Update:
+   - Integration tests now properly test the app adapter functionality
+   - Test service implements proper signal handling for graceful shutdown
+   - Service discovery tests verify the full adapter functionality
+   - Tests include service lifecycle management (start, stop)
+   - Makefile now includes test-integration and test-all targets
+   - Documentation clearly explains how to run and extend integration tests
+   - Next up: Implement and test Configuration System
+
 ## Next Steps
 1. Test and verify Process Orchestrator implementation:
    - Run comprehensive unit tests against new implementation

@@ -351,24 +351,74 @@ func (s *Storage) DeleteContent(ctx context.Context, id string) error {
 
 ### Rules
 
-1. **Package-Level Testing**: Each package has its own tests focused on its functionality
+1. **Dedicated Test Directories**: Use a clear directory structure for different test types
 2. **Interface Mocking**: Use interfaces from types/ package to create mocks for testing
 3. **Table-Driven Tests**: Use table-driven tests for testing multiple scenarios
-4. **Integration Tests**: Create separate tests for verifying cross-package communication
-5. **Test Coverage**: Aim for at least 80% test coverage for each package
+4. **Test Coverage**: Aim for at least 80% test coverage for each package
+
+### Test Directory Structure
+
+```
+blackhole/
+├── internal/
+│   └── core/
+│       ├── app/
+│       │   ├── app.go                  # Source code
+│       │   └── app_test.go             # Unit tests
+│       └── process/
+│           ├── orchestrator.go         # Source code
+│           └── orchestrator_test.go    # Unit tests
+│
+└── test/                               # Top-level test directory
+    ├── unit/                           # Specialized unit tests
+    │   └── core/                       # Mirrors internal structure
+    │       └── app/
+    │           └── app_advanced_test.go
+    │
+    ├── integration/                    # Integration tests
+    │   ├── app_adapter_test.go         # Cross-component tests
+    │   ├── README.md                   # Test documentation
+    │   └── test-service/               # Test service fixtures
+    │       ├── main.go                 # Test service implementation
+    │       └── go.mod                  # Service module definition
+    │
+    ├── performance/                    # Performance tests
+    │   └── benchmarks/
+    │       └── orchestrator_bench_test.go
+    │
+    └── fixtures/                       # Shared test fixtures
+        ├── configs/                    # Test configurations
+        └── data/                       # Test data files
+```
 
 ### Test Types
 
-1. **Unit Tests**: Test individual functions and methods in isolation
-2. **Integration Tests**: Test interaction between multiple components
-3. **Functional Tests**: Test complete features from a user perspective
-4. **Performance Tests**: Test system performance under load
-5. **Benchmark Tests**: Measure and track performance over time
+1. **Unit Tests**: 
+   - Located alongside source code with `_test.go` suffix
+   - Test individual functions and methods in isolation
+   - Focus on function/method behavior with mocked dependencies
 
-### Example
+2. **Integration Tests**:
+   - Located in the `/test/integration/` directory
+   - Test interaction between multiple components
+   - Often require test service implementations and fixtures
+   - May create temporary directories and configurations
+   - Should be skippable with `-short` flag for quick runs
+
+3. **Functional Tests**:
+   - Located in the `/test/functional/` directory
+   - Test complete features from a user perspective
+   - Often involve running the full system in a test environment
+
+4. **Performance Tests**:
+   - Located in the `/test/performance/` directory
+   - Benchmark system performance under load
+   - Compare performance metrics across changes
+
+### Example Unit Test
 
 ```go
-// In storage/storage_test.go
+// In internal/core/storage/storage_test.go
 func TestStorage_StoreContent(t *testing.T) {
     tests := []struct {
         name        string
@@ -383,27 +433,7 @@ func TestStorage_StoreContent(t *testing.T) {
             content:   []byte{},
             wantErr:   true,
         },
-        {
-            name:      "Validation failure",
-            content:   []byte("test content"),
-            mockValidate: func(content []byte) error {
-                return errors.New("validation failed")
-            },
-            wantErr:   true,
-        },
-        {
-            name:      "Storage success",
-            content:   []byte("test content"),
-            mockValidate: func(content []byte) error {
-                return nil
-            },
-            mockStore: func(ctx context.Context, content []byte) (string, error) {
-                return "test-id", nil
-            },
-            wantID:    "test-id",
-            wantErr:   false,
-        },
-        // More test cases...
+        // Additional test cases...
     }
     
     for _, tt := range tests {
@@ -435,6 +465,94 @@ func TestStorage_StoreContent(t *testing.T) {
     }
 }
 ```
+
+### Example Integration Test
+
+```go
+// In test/integration/app_adapter_test.go
+func TestAppAdapter_Integration(t *testing.T) {
+    if testing.Short() {
+        t.Skip("Skipping integration tests in short mode")
+    }
+
+    // Setup test environment
+    tempDir := setupTestDir(t)
+    testServiceBin := buildTestService(t, tempDir)
+    testConfig := createTestConfig(t, tempDir, testServiceBin)
+    
+    // Create the application to test
+    app := createTestApp(t, configManager)
+    
+    // Test service lifecycle
+    t.Run("ServiceLifecycle", func(t *testing.T) {
+        // Initialize app
+        err := app.Initialize()
+        require.NoError(t, err)
+        
+        // Start service
+        err = app.StartService("test-service")
+        require.NoError(t, err)
+        
+        // Verify running state
+        info, err := app.GetServiceInfo("test-service")
+        require.NoError(t, err)
+        assert.True(t, info.Running)
+        
+        // Stop service
+        err = app.StopService("test-service")
+        require.NoError(t, err)
+        
+        // Verify stopped state
+        info, err = app.GetServiceInfo("test-service")
+        require.NoError(t, err)
+        assert.False(t, info.Running)
+    })
+}
+```
+
+### Test Execution Commands
+
+The Makefile provides several commands for running tests with different scopes:
+
+```makefile
+# Run tests (excluding integration tests)
+.PHONY: test
+test:
+	@echo "Running tests (excluding integration)..."
+	$(GO) test -v -short ./...
+
+# Run only integration tests
+.PHONY: test-integration
+test-integration:
+	@echo "Running integration tests..."
+	$(GO) test -v ./test/integration/...
+
+# Run all tests including integration
+.PHONY: test-all
+test-all:
+	@echo "Running all tests..."
+	$(GO) test -v ./...
+
+# Run tests with race detection
+.PHONY: test-race
+test-race:
+	@echo "Running tests with race detection..."
+	$(GO) test -race -v -short ./...
+
+# Run tests with coverage
+.PHONY: test-coverage
+test-coverage:
+	@echo "Running tests with coverage..."
+	$(GO) test -coverprofile=coverage.out -short ./...
+	$(GO) tool cover -html=coverage.out -o coverage.html
+```
+
+Usage:
+- `make test` - Run just unit tests (fast, for frequent usage)
+- `make test-integration` - Run only integration tests
+- `make test-all` - Run all tests including integration tests (thorough, but slower)
+- `make test-race` - Run tests with race detection to find concurrency issues
+- `make test-coverage` - Generate test coverage report
 
 ## Code Review Checklist
 
@@ -978,8 +1096,10 @@ jobs:
           go-version: '1.22'
       - name: Build
         run: make build
-      - name: Test
+      - name: Unit Tests
         run: make test
+      - name: Integration Tests
+        run: make test-integration
       - name: Lint
         run: make lint
 
