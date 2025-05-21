@@ -126,17 +126,17 @@ func (a *Application) RegisterService(service types.Service) error {
 	return nil
 }
 
-// Start starts the application
-func (a *Application) Start() error {
+// InitializeProcessManager initializes the process manager without starting services
+func (a *Application) InitializeProcessManager() error {
 	a.mu.Lock()
-	if a.isActive {
-		a.mu.Unlock()
-		return nil // Already started
+	defer a.mu.Unlock()
+	
+	// Check if process manager is already initialized
+	if a.processManager != nil {
+		return nil
 	}
-	a.isActive = true
-	a.mu.Unlock()
-
-	a.logger.Info("Starting Blackhole application")
+	
+	a.logger.Debug("Initializing process manager")
 	
 	// Create process manager using the factory
 	processManager, err := a.processManagerFactory.CreateProcessManager(
@@ -151,6 +151,27 @@ func (a *Application) Start() error {
 	}
 	a.processManager = processManager
 	
+	a.logger.Debug("Process manager initialized")
+	return nil
+}
+
+// Start starts the application
+func (a *Application) Start() error {
+	a.mu.Lock()
+	if a.isActive {
+		a.mu.Unlock()
+		return nil // Already started
+	}
+	a.isActive = true
+	a.mu.Unlock()
+
+	a.logger.Info("Starting Blackhole application")
+	
+	// Initialize process manager if not already done
+	if err := a.InitializeProcessManager(); err != nil {
+		return err
+	}
+	
 	// Start the process manager
 	if err := a.processManager.Start(); err != nil {
 		return &types.AppError{
@@ -158,12 +179,14 @@ func (a *Application) Start() error {
 			Err:     err,
 		}
 	}
+	a.logger.Info("Process manager started", zap.String("caller", "adapter/adapter.go:73"))
 	
 	// Start all enabled services
 	if err := a.processManager.StartAll(); err != nil {
 		a.logger.Warn("Some services failed to start", zap.Error(err))
 		// Continue with the services that did start
 	}
+	a.logger.Info("Starting all services", zap.String("caller", "adapter/adapter.go:102"))
 	
 	a.logger.Info("Blackhole application started successfully")
 	return nil

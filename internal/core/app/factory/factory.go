@@ -34,9 +34,22 @@ func (f *DefaultProcessManagerFactory) CreateProcessManager(
 	configManager types.ConfigManager, 
 	logger *zap.Logger,
 ) (types.ProcessManager, error) {
-	// We need to create a core ConfigManager from our app ConfigManager
-	// For this we'll create a temporary core ConfigManager using default config
-	coreConfigManager := config.NewConfigManager(logger)
+	// We need to get the core ConfigManager from our app ConfigManager adapter
+	// First we need to check if it's our adapter type
+	var coreConfigManager *config.ConfigManager
+	
+	// Check if we have our adapter to extract the core manager
+	if adapter, ok := configManager.(*adapter.ConfigManagerAdapter); ok {
+		coreConfigManager = adapter.GetCoreManager()
+	}
+	
+	// If not, create a temporary core ConfigManager
+	if coreConfigManager == nil {
+		logger.Warn("Failed to get core ConfigManager from adapter, creating a new one with defaults")
+		coreConfigManager = config.NewConfigManager(logger)
+	} else {
+		logger.Info("Using configured ConfigManager from adapter")
+	}
 
 	// Create a new process orchestrator with the core config manager and logger
 	orchestrator, err := process.NewOrchestrator(

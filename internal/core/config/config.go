@@ -33,8 +33,8 @@ func NewDefaultConfig() *types.Config {
 			P2PEnabled: true,
 		},
 		Orchestrator: types.OrchestratorConfig{
-			ServicesDir:     "/var/lib/blackhole/services",
-			SocketDir:       "/var/run/blackhole",
+			ServicesDir:     "./services",
+			SocketDir:       "./sockets",
 			LogLevel:        "info",
 			AutoRestart:     true,
 			ShutdownTimeout: 30,
@@ -79,6 +79,10 @@ func (l *FileLoader) Load() (*types.Config, error) {
 			return nil, fmt.Errorf("failed to read config file: %w", err)
 		}
 		// Config file not found; use defaults
+		fmt.Printf("Config file not found, using defaults\n")
+	} else {
+		fmt.Printf("Config loaded successfully: %s\n", v.ConfigFileUsed())
+		fmt.Printf("ServicesDir from config: %s\n", v.GetString("orchestrator.services_dir"))
 	}
 	
 	// Create new config with defaults

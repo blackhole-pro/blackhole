@@ -68,6 +68,12 @@ type ProcessManager interface {
 	
 	// GetServiceInfo returns information about a service
 	GetServiceInfo(name string) (ServiceInfo, error)
+	
+	// DiscoverServices discovers available services by finding service binaries in the services directory
+	DiscoverServices() ([]string, error)
+	
+	// RefreshServices re-discovers services and updates service configurations
+	RefreshServices() ([]string, error)
 }
 
 // ProcessManagerFactory defines an interface for creating ProcessManager instances.
