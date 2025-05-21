@@ -1,6 +1,8 @@
 # Blackhole
 
-Blackhole is a truly decentralized content sharing platform that puts users in control of their data while enabling engaging social experiences. Built on a foundation of IPFS/Filecoin for storage, DIDs for self-sovereign identity, and ActivityPub for social federation, Blackhole creates a new paradigm for content sharing that balances user sovereignty with service provider innovation.
+[![GitHub](https://img.shields.io/badge/GitHub-handcraftdev/blackhole-blue)](https://github.com/handcraftdev/blackhole)
+
+Blackhole is a truly decentralized protocol that puts users in control of their data while enabling engaging social experiences. Built on a foundation of IPFS/Filecoin for storage, DIDs for self-sovereign identity, and ActivityPub for social federation, Blackhole creates a new paradigm for content sharing that balances user sovereignty with service provider innovation.
 
 ## Three-Layer Architecture
 
@@ -80,7 +82,7 @@ For detailed architecture, see [PROJECT.md](./PROJECT.md) and [subprocess_archit
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/blackhole.git
+   git clone https://github.com/handcraftdev/blackhole.git
    cd blackhole
    ```
 
@@ -116,6 +118,10 @@ For detailed architecture, see [PROJECT.md](./PROJECT.md) and [subprocess_archit
 ## Development
 
 Blackhole is primarily written in Go, with client SDKs in various languages.
+
+### Repository
+
+The project is hosted on GitHub at [handcraftdev/blackhole](https://github.com/handcraftdev/blackhole). The Go module path is `github.com/handcraftdev/blackhole`.
 
 ### Common Commands
 
