@@ -182,9 +182,49 @@ func NewOrchestrator(configManager *config.ConfigManager, options ...Orchestrato
 	// Setup signal handling
 	o.setupSignals()
 	
-	// Verify services directory exists
+	// Handle relative paths by converting to absolute paths
+	servicesDir := o.config.ServicesDir
+	socketDir := o.config.SocketDir
+	
+	// Convert relative paths to absolute
+	if !filepath.IsAbs(servicesDir) {
+		absPath, err := filepath.Abs(servicesDir)
+		if err == nil {
+			servicesDir = absPath
+			o.logger.Debug("Converted relative services directory path to absolute", 
+				zap.String("relative", o.config.ServicesDir), 
+				zap.String("absolute", servicesDir))
+		}
+	}
+	
+	if !filepath.IsAbs(socketDir) {
+		absPath, err := filepath.Abs(socketDir)
+		if err == nil {
+			socketDir = absPath
+			o.logger.Debug("Converted relative socket directory path to absolute", 
+				zap.String("relative", o.config.SocketDir), 
+				zap.String("absolute", socketDir))
+		}
+	}
+	
+	// Update config with absolute paths
+	o.config.ServicesDir = servicesDir
+	o.config.SocketDir = socketDir
+	
+	// Ensure services directory exists, create if it doesn't
 	if !dirExists(o.config.ServicesDir) {
-		return nil, fmt.Errorf("services directory not found: %s", o.config.ServicesDir)
+		if err := os.MkdirAll(o.config.ServicesDir, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create services directory %s: %w", o.config.ServicesDir, err)
+		}
+		o.logger.Info("Created services directory", zap.String("path", o.config.ServicesDir))
+	}
+	
+	// Ensure socket directory exists, create if it doesn't
+	if !dirExists(o.config.SocketDir) {
+		if err := os.MkdirAll(o.config.SocketDir, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create socket directory %s: %w", o.config.SocketDir, err)
+		}
+		o.logger.Info("Created socket directory", zap.String("path", o.config.SocketDir))
 	}
 	
 	// Subscribe to configuration changes
@@ -736,10 +776,16 @@ func (o *Orchestrator) DiscoverServices() ([]string, error) {
 	var services []string
 	
 	// Read services directory
+	o.logger.Info("Searching for services in directory", zap.String("directory", o.config.ServicesDir))
 	entries, err := os.ReadDir(o.config.ServicesDir)
 	if err != nil {
+		o.logger.Error("Failed to read services directory", 
+			zap.String("directory", o.config.ServicesDir),
+			zap.Error(err))
 		return nil, fmt.Errorf("failed to read services directory: %w", err)
 	}
+	
+	o.logger.Info("Found directory entries", zap.Int("count", len(entries)))
 	
 	// Check each entry for service binary
 	for _, entry := range entries {
@@ -747,10 +793,22 @@ func (o *Orchestrator) DiscoverServices() ([]string, error) {
 			serviceName := entry.Name()
 			serviceBinaryPath := filepath.Join(o.config.ServicesDir, serviceName, serviceName)
 			
+			o.logger.Info("Checking service binary", 
+				zap.String("directory", serviceName),
+				zap.String("binary_path", serviceBinaryPath))
+			
 			// Check if binary exists and is executable
-			if fileExists(serviceBinaryPath) && isExecutable(serviceBinaryPath) {
+			fileExistsResult := fileExists(serviceBinaryPath)
+			isExecutableResult := isExecutable(serviceBinaryPath)
+			
+			o.logger.Info("Service binary check results", 
+				zap.String("path", serviceBinaryPath),
+				zap.Bool("exists", fileExistsResult),
+				zap.Bool("executable", isExecutableResult))
+			
+			if fileExistsResult && isExecutableResult {
 				services = append(services, serviceName)
-				o.logger.Debug("Discovered service binary", 
+				o.logger.Info("Discovered service binary", 
 					zap.String("service", serviceName),
 					zap.String("path", serviceBinaryPath))
 			}
@@ -764,6 +822,59 @@ func (o *Orchestrator) DiscoverServices() ([]string, error) {
 		o.logger.Info("Discovered service binaries", 
 			zap.Int("count", len(services)),
 			zap.Strings("services", services))
+	}
+	
+	return services, nil
+}
+
+// RefreshServices re-discovers services in the services directory and updates
+// the orchestrator's service configurations accordingly.
+//
+// This method discovers available service binaries in the services directory,
+// identifies newly added services, and logs any changes. It's useful for 
+// dynamically adding new services without restarting the orchestrator.
+//
+// The method returns a list of all discovered service names and any error
+// that occurred during discovery.
+//
+// Returns:
+//   - []string: List of service names that were discovered
+//   - error: Any error that occurred during directory scanning
+//
+// Example:
+//
+//	services, err := orchestrator.RefreshServices()
+//	if err != nil {
+//	  // handle error
+//	}
+//	fmt.Printf("Refreshed services: %v\n", services)
+func (o *Orchestrator) RefreshServices() ([]string, error) {
+	// Discover available services
+	services, err := o.DiscoverServices()
+	if err != nil {
+		return nil, err
+	}
+	
+	o.processLock.Lock()
+	defer o.processLock.Unlock()
+	
+	// Log any newly discovered services
+	var newServices []string
+	for _, serviceName := range services {
+		if _, exists := o.services[serviceName]; !exists {
+			newServices = append(newServices, serviceName)
+			
+			// Add default configuration for newly discovered services
+			o.services[serviceName] = &configtypes.ServiceConfig{
+				Enabled: true, // Enable by default
+				BinaryPath: filepath.Join(o.config.ServicesDir, serviceName, serviceName),
+			}
+		}
+	}
+	
+	if len(newServices) > 0 {
+		o.logger.Info("Discovered new services",
+			zap.Strings("services", newServices))
 	}
 	
 	return services, nil

@@ -1,7 +1,8 @@
 # Blackhole Configuration
 
 orchestrator:
-  socket_dir: /var/run/blackhole
+  socket_dir: ./sockets
+  services_dir: ./bin/services
   log_level: info
   
 services:

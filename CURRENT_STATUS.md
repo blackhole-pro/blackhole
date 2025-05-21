@@ -6,6 +6,126 @@ Working on implementing the Blackhole distributed content sharing platform with 
 
 ## Latest Updates (5/21/2025)
 
+### Fixed Configuration Loading and Service Discovery Path
+1. ✅ Fixed critical config loading issue:
+   - Identified and fixed a configuration loading issue where config file wasn't loaded
+   - Updated main.go to properly load configuration from configs/blackhole.yaml
+   - Fixed ConfigManagerAdapter to correctly pass the core config manager to the orchestrator
+   - Added GetCoreManager method to allow access to the underlying config manager
+   - Enhanced factory.go to use the configured ConfigManager instead of creating a default one
+   - Added proper logging for configuration loading process
+   - Fixed the service discovery process to use the configured services_dir path
+2. Progress Update:
+   - Configuration is now properly loaded from the config file
+   - Service discovery correctly uses the configured services_dir path (bin/services)
+   - Test service is successfully detected in the proper directory
+   - Fixed a critical design issue where the orchestrator was using default config values
+   - Improved the adapter pattern to properly share configuration between components
+   - Configuration changes now properly affect the orchestrator behavior
+   - Next up: Add comprehensive unit tests for these fixes
+
+### Added Test Service and Fixed Service Discovery Structure
+1. ✅ Fixed service detection and directory structure:
+   - Created a test service binary to verify discovery functionality
+   - Updated configuration to use the correct services directory path (bin/services)
+   - Fixed the service binary structure to match detection requirements
+   - Ensured binary is properly executable with correct permissions
+   - Updated debugging output to trace service discovery issues
+   - Aligned directory structure with the core service detection logic
+2. Progress Update:
+   - Service discovery now works with the correct directory structure
+   - Test service is properly detected by the orchestrator
+   - Configuration matches the service binary location requirements
+   - Binaries are properly structured in the bin/services directory
+   - File detection and binary path resolution working correctly
+   - Next up: Add comprehensive unit tests for the discover command
+
+### Added CLI Command for Service Discovery
+1. ✅ Created a new CLI command for discovering and refreshing services:
+   - Implemented the `discover` command with support for listing available services
+   - Added the ability to refresh service configurations with `--refresh` flag
+   - Created detailed tabular output showing service status, configuration, and binary paths
+   - Added informative messages when no services are found
+   - Integrated with the RefreshServices and DiscoverServices functions
+   - Updated root command to include the new discover command
+2. Progress Update:
+   - Users can now discover and refresh services using the CLI
+   - Command provides detailed output about discovered services
+   - RefreshServices functionality is exposed through the CLI interface
+   - Added clear guidance on next steps when services are discovered
+   - Improved the UX by adding helpful messages about using the services
+   - Next up: Add comprehensive unit tests for the discover command
+
+### Implemented Service Discovery and Refresh Functions
+1. ✅ Added and enhanced service discovery capabilities:
+   - Implemented RefreshServices function in the orchestrator
+   - Enhanced the DiscoverServices implementation with better error handling
+   - Added proper adapter methods for both functions to follow development guidelines
+   - Ensured methods are accessible through reflection for loose coupling
+   - Implemented automatic configuration of newly discovered services
+   - Added comprehensive logging for the service discovery process
+2. Progress Update:
+   - The orchestrator can now discover and refresh services dynamically
+   - New services can be added without restarting the orchestrator
+   - The adapter properly exposes service discovery functions
+   - Implementation follows the interface-based design from development guidelines
+   - Code includes comprehensive documentation and proper error handling
+   - Next up: Add comprehensive tests for these new functions
+
+### Fixed CLI Commands for Empty Services Directory
+1. ✅ Fixed CLI behavior when no service binaries are available:
+   - Fixed duplicate messages in the start command with proper error handling
+   - Updated StartAll implementation with NoServicesError for clear feedback
+   - Fixed status command to always show orchestrator status even with no services
+   - Implemented improved user feedback with clear instructions on next steps
+   - Added special error types for better error handling and user guidance
+   - Ensured the orchestrator can run independently from its services
+2. Progress Update:
+   - The CLI now clearly shows orchestrator status separately from services
+   - Start command provides single, clear message when no services are found
+   - Status command properly shows orchestrator status as running even when no services exist
+   - Enhanced user experience with more helpful and actionable messages
+   - Fixed the service discovery mechanism to work better with reflection
+   - Next up: Add documentation for service binary creation
+
+### Implemented Comprehensive CLI Commands
+1. ✅ Created a complete command-line interface for the application:
+   - Implemented `start` command to start one or all services with proper options
+   - Implemented `stop` command to gracefully stop running services
+   - Implemented `restart` command for service lifecycle management
+   - Implemented `status` command with formatted table output
+   - Implemented `logs` command with flexible filtering options
+   - Created proper argument validation and error handling
+   - Added detailed help text with examples for all commands
+   - Created proper adapters for the Process Manager
+2. Progress Update:
+   - Full user-friendly CLI interface now available
+   - Better command-line experience with comprehensive help
+   - Improved error messages and validation
+   - Consistent design across all commands
+   - Support for both individual service and bulk operations
+   - Nicely formatted tabular output for status command
+   - Next up: Add additional configuration options for resource limits
+
+### Improved Error Handling and Configuration Flexibility
+1. ✅ Enhanced application resilience with better directory handling:
+   - Modified process orchestrator to automatically create necessary directories
+   - Added automatic creation of services directory if missing
+   - Added automatic creation of socket directory if missing
+   - Updated configuration to use relative paths instead of absolute system paths
+   - Fixed application startup error when directories don't exist
+   - Added support for converting relative paths to absolute paths
+   - Enhanced error messages with more specific information
+2. Progress Update:
+   - Application now creates necessary directories on startup
+   - Removed hard dependency on system directories like /var/lib/blackhole/services
+   - Added path conversion that handles both relative and absolute paths
+   - Improved user experience by eliminating manual directory creation
+   - Fixed error with missing directories by automatically creating them
+   - Enhanced error messages to be more actionable
+   - Application now works successfully in development mode
+   - Next up: Add tests to verify path handling behavior
+
 ### Fixed Type Compatibility Between App and Core Packages
 1. ✅ Resolved type compatibility issues across package boundaries:
    - Fixed imports to correctly reference config/types package

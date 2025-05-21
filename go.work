@@ -3,4 +3,5 @@ go 1.21
 use (
 	.
 	./internal/services/identity
+	./internal/services/test-service
 )

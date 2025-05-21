@@ -153,6 +153,18 @@ func (a *ProcessManagerAdapter) GetServiceInfo(name string) (types.ServiceInfo, 
 	}, nil
 }
 
+// DiscoverServices implements the types.ProcessManager.DiscoverServices method
+func (a *ProcessManagerAdapter) DiscoverServices() ([]string, error) {
+	a.logger.Debug("Discovering services via adapter")
+	return a.orchestrator.DiscoverServices()
+}
+
+// RefreshServices implements the types.ProcessManager.RefreshServices method
+func (a *ProcessManagerAdapter) RefreshServices() ([]string, error) {
+	a.logger.Debug("Refreshing services via adapter")
+	return a.orchestrator.RefreshServices()
+}
+
 // ConfigManagerAdapter adapts core.config.ConfigManager to app.types.ConfigManager
 type ConfigManagerAdapter struct {
 	manager *config.ConfigManager
@@ -165,6 +177,11 @@ func NewConfigManagerAdapter(manager *config.ConfigManager, logger *zap.Logger) 
 		manager: manager,
 		logger:  logger,
 	}
+}
+
+// GetCoreManager returns the underlying core ConfigManager
+func (a *ConfigManagerAdapter) GetCoreManager() *config.ConfigManager {
+	return a.manager
 }
 
 // GetConfig implements the types.ConfigManager.GetConfig method
@@ -184,8 +201,15 @@ func (a *ConfigManagerAdapter) SetConfig(config *types.Config) error {
 // LoadFromFile implements the types.ConfigManager.LoadFromFile method
 func (a *ConfigManagerAdapter) LoadFromFile(path string) error {
 	// Use the core config manager to load the file
-	// But this is a simplified implementation
 	a.logger.Info("Loading config from file", zap.String("path", path))
+	err := a.manager.LoadFromFile(path)
+	if err != nil {
+		a.logger.Error("Failed to load config file", 
+			zap.String("path", path),
+			zap.Error(err))
+		return err
+	}
+	a.logger.Info("Config file loaded successfully", zap.String("path", path))
 	return nil
 }
 
