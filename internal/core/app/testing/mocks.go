@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/handcraftdev/blackhole/internal/core/app/types"
+	"go.uber.org/zap"
 )
 
 // MockService is a mock implementation of the Service interface
@@ -142,7 +143,7 @@ func (m *MockApplication) GetProcessManager() types.ProcessManager {
 	if m.GetProcessManagerFunc != nil {
 		return m.GetProcessManagerFunc()
 	}
-	return &MockProcessManager{}
+	return NewMockProcessManager()
 }
 
 // GetConfigManager implements the Application.GetConfigManager method
@@ -150,7 +151,7 @@ func (m *MockApplication) GetConfigManager() types.ConfigManager {
 	if m.GetConfigManagerFunc != nil {
 		return m.GetConfigManagerFunc()
 	}
-	return &MockConfigManager{}
+	return NewMockConfigManager()
 }
 
 // RegisterService implements the Application.RegisterService method
@@ -196,14 +197,16 @@ func NewMockApplication() *MockApplication {
 
 // MockProcessManager is a mock implementation of the ProcessManager interface
 type MockProcessManager struct {
-	StartFunc         func() error
-	StopFunc          func() error
-	StartAllFunc      func() error
-	StopAllFunc       func() error
-	StartServiceFunc  func(name string) error
-	StopServiceFunc   func(name string) error
-	RestartServiceFunc func(name string) error
-	GetServiceInfoFunc func(name string) (types.ServiceInfo, error)
+	StartFunc           func() error
+	StopFunc            func() error
+	StartAllFunc        func() error
+	StopAllFunc         func() error
+	StartServiceFunc    func(name string) error
+	StopServiceFunc     func(name string) error
+	RestartServiceFunc  func(name string) error
+	GetServiceInfoFunc  func(name string) (types.ServiceInfo, error)
+	DiscoverServicesFunc func() ([]string, error)
+	RefreshServicesFunc  func() ([]string, error)
 	
 	// State tracking
 	started         bool
@@ -355,6 +358,48 @@ func (m *MockProcessManager) GetServiceInfo(name string) (types.ServiceInfo, err
 	}
 	
 	return serviceInfo, nil
+}
+
+// DiscoverServices implements the ProcessManager.DiscoverServices method
+func (m *MockProcessManager) DiscoverServices() ([]string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	
+	if m.DiscoverServicesFunc != nil {
+		return m.DiscoverServicesFunc()
+	}
+	
+	if m.services == nil {
+		return []string{}, nil
+	}
+	
+	services := make([]string, 0, len(m.services))
+	for name := range m.services {
+		services = append(services, name)
+	}
+	
+	return services, nil
+}
+
+// RefreshServices implements the ProcessManager.RefreshServices method
+func (m *MockProcessManager) RefreshServices() ([]string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	
+	if m.RefreshServicesFunc != nil {
+		return m.RefreshServicesFunc()
+	}
+	
+	if m.services == nil {
+		return []string{}, nil
+	}
+	
+	services := make([]string, 0, len(m.services))
+	for name := range m.services {
+		services = append(services, name)
+	}
+	
+	return services, nil
 }
 
 // NewMockProcessManager creates a new MockProcessManager
