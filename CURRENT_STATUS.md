@@ -571,11 +571,14 @@ Working on implementing the Blackhole distributed content sharing platform with 
    - ✅ Fix imports to reference correct packages
    - ✅ Update test helper functions for better testability
    - ✅ Ensure all tests compile and run successfully
-   - Migrate shutdown_test.go to test/unit/core/process/ directory
-   - Migrate signal_test.go to test/unit/core/process/ directory
-   - Migrate info_test.go to test/unit/core/process/ directory
-   - Migrate concurrent_test.go to test/unit/core/process/ directory
-   - Migrate config_test.go to test/unit/core/process/ directory
+   - ✅ Migrate shutdown_test.go to test/unit/core/process/ directory
+   - ✅ Migrate signal_test.go to test/unit/core/process/ directory
+   - ✅ Migrate info_test.go to test/unit/core/process/ directory
+   - ✅ Migrate concurrent_test.go to test/unit/core/process/ directory
+   - ✅ Migrate config_test.go to test/unit/core/process/ directory
+   - ✅ Remove original test files from source directories
+   - ✅ Create proper test file structure with testing interfaces
+   - ✅ Migrate app_test.go to test/unit/core/app/ directory
 
 4. Implement the Configuration System:
    - Complete the configuration watching and notification system
