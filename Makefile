@@ -28,23 +28,35 @@ $(SERVICES):
 	@mkdir -p $(BINARY_DIR)
 	$(GO) build $(GOFLAGS) -o $(BINARY_DIR)/$@ ./internal/services/$@
 
-# Run tests
+# Run tests (excluding integration tests)
 .PHONY: test
 test:
-	@echo "Running tests..."
+	@echo "Running tests (excluding integration)..."
+	$(GO) test -v -short ./...
+
+# Run only integration tests
+.PHONY: test-integration
+test-integration:
+	@echo "Running integration tests..."
+	$(GO) test -v ./test/integration/...
+
+# Run all tests including integration
+.PHONY: test-all
+test-all:
+	@echo "Running all tests..."
 	$(GO) test -v ./...
 
 # Run tests with race detection
 .PHONY: test-race
 test-race:
 	@echo "Running tests with race detection..."
-	$(GO) test -race -v ./...
+	$(GO) test -race -v -short ./...
 
 # Run tests with coverage
 .PHONY: test-coverage
 test-coverage:
 	@echo "Running tests with coverage..."
-	$(GO) test -coverprofile=coverage.out ./...
+	$(GO) test -coverprofile=coverage.out -short ./...
 	$(GO) tool cover -html=coverage.out -o coverage.html
 
 # Lint the code
@@ -107,7 +119,9 @@ help:
 	@echo "Available targets:"
 	@echo "  build          - Build the main binary"
 	@echo "  build-services - Build all service binaries"
-	@echo "  test           - Run tests"
+	@echo "  test           - Run tests (excluding integration)"
+	@echo "  test-integration - Run only integration tests"
+	@echo "  test-all       - Run all tests including integration"
 	@echo "  test-race      - Run tests with race detection"
 	@echo "  test-coverage  - Run tests with coverage"
 	@echo "  lint           - Run linter"

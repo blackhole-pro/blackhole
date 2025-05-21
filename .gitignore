@@ -75,3 +75,6 @@ node_modules/
 # Task files
 tasks.json
 tasks/ 
+internal/services/test-service/go.mod
+internal/services/test-service/main.go
+internal/services/test-service/test-service
