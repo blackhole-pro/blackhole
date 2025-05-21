@@ -1,8 +1,8 @@
-# Process Orchestrator Simplified Implementation Plan
+# Process Orchestrator Implementation Plan
 
-*Updated: May 20, 2025*
+*Updated: May 21, 2025*
 
-This document outlines a simplified implementation approach for the Process Orchestrator, the central component responsible for managing service processes in the Blackhole platform.
+This document outlines the implemented approach for the Process Orchestrator, the central component responsible for managing service processes in the Blackhole platform.
 
 ## Component Overview
 
@@ -12,53 +12,57 @@ The Process Orchestrator is responsible for:
 - Monitoring service health
 - Restarting failed services
 - Managing process lifecycle
-- Enforcing basic resource limits
+- Enforcing resource limits
+- Handling structured output logging
 
-## Simplified Design Principles
+## Design Principles
 
-The simplified implementation follows these design principles:
+The implementation follows these design principles:
 
-1. **Clear Interfaces**: Separate interfaces for each responsibility to improve testing
-2. **State Pattern**: Explicit state management for service processes
-3. **Typed Errors**: Domain-specific error types for better error handling
-4. **Dependency Injection**: Improve testability through constructor injection
-5. **Single Responsibility**: Each component has a focused, well-defined role
+1. **Modular Component Architecture**: The orchestrator is divided into specialized subpackages:
+   - `types`: Core interfaces and error types
+   - `service`: Service lifecycle management
+   - `supervision`: Process monitoring and restart logic
+   - `isolation`: Resource limits and environment setup
+   - `output`: Structured output handling
+   - `executor`: Process execution abstraction
 
-## Implementation Approach
+2. **Clear Interfaces**: Separate interfaces for each responsibility to improve testing:
+   - `ProcessManager`: Service lifecycle operations
+   - `ProcessExecutor`: OS process abstraction
+   - `ProcessSpawner`: Process creation
 
-### 1. Core Interfaces and Types
+3. **Dependency Injection**: Improve testability through constructor injection
+   - Functional options pattern for configuration
+   - External dependencies like loggers can be injected
+
+4. **Strong Error Handling**: Domain-specific error types
+   - Detailed error contexts
+   - Support for Go 1.13+ error wrapping
+   - Error helper functions
+
+5. **Flexible Configuration**: Dynamic configuration system integration
+   - Configuration change subscription
+   - Service-specific configurations
+   - File and environment-based settings
+
+## Core Interfaces and Types
+
+The core interfaces and types define the contract between components:
+
+### Process State Management
 
 ```go
-// Import Configuration System types
-import (
-    "github.com/handcraftdev/blackhole/pkg/config"
-)
-
 // ProcessState represents the state of a service process
 type ProcessState string
 
 const (
-    ProcessStateStopped   ProcessState = "stopped"
-    ProcessStateStarting  ProcessState = "starting"
-    ProcessStateRunning   ProcessState = "running"
-    ProcessStateFailed    ProcessState = "failed"
+    ProcessStateStopped    ProcessState = "stopped"
+    ProcessStateStarting   ProcessState = "starting"
+    ProcessStateRunning    ProcessState = "running"
+    ProcessStateFailed     ProcessState = "failed"
     ProcessStateRestarting ProcessState = "restarting"
 )
-
-// ProcessError provides contextual information about process errors
-type ProcessError struct {
-    Service string
-    Err     error
-    ExitCode int
-}
-
-func (e *ProcessError) Error() string {
-    return fmt.Sprintf("service %s: %v (exit code: %d)", e.Service, e.Err, e.ExitCode)
-}
-
-func (e *ProcessError) Unwrap() error {
-    return e.Err
-}
 
 // ProcessManager defines the interface for process lifecycle operations
 type ProcessManager interface {
@@ -68,7 +72,11 @@ type ProcessManager interface {
     Status(name string) (ProcessState, error)
     IsRunning(name string) bool
 }
+```
 
+### OS Process Abstraction
+
+```go
 // ProcessExecutor abstracts the execution mechanism for better testability
 type ProcessExecutor interface {
     Command(path string, args ...string) ProcessCmd
@@ -90,106 +98,88 @@ type Process interface {
     Pid() int
     Kill() error
 }
+```
 
-// DefaultProcessExecutor uses os/exec to execute processes
-type DefaultProcessExecutor struct{}
+### Service Information
 
-func (e *DefaultProcessExecutor) Command(path string, args ...string) ProcessCmd {
-    return &DefaultProcessCmd{cmd: exec.Command(path, args...)}
-}
-
-// DefaultProcessCmd wraps os/exec.Cmd
-type DefaultProcessCmd struct {
-    cmd *exec.Cmd
-}
-
-func (c *DefaultProcessCmd) Start() error {
-    return c.cmd.Start()
-}
-
-func (c *DefaultProcessCmd) Wait() error {
-    return c.cmd.Wait()
-}
-
-func (c *DefaultProcessCmd) SetEnv(env []string) {
-    c.cmd.Env = env
-}
-
-func (c *DefaultProcessCmd) SetDir(dir string) {
-    c.cmd.Dir = dir
-}
-
-func (c *DefaultProcessCmd) SetOutput(stdout, stderr io.Writer) {
-    c.cmd.Stdout = stdout
-    c.cmd.Stderr = stderr
-}
-
-func (c *DefaultProcessCmd) Signal(sig os.Signal) error {
-    if c.cmd.Process == nil {
-        return fmt.Errorf("process not started")
-    }
-    return c.cmd.Process.Signal(sig)
-}
-
-func (c *DefaultProcessCmd) Process() Process {
-    if c.cmd.Process == nil {
-        return nil
-    }
-    return &DefaultProcess{process: c.cmd.Process}
-}
-
-// DefaultProcess wraps os.Process
-type DefaultProcess struct {
-    process *os.Process
-}
-
-func (p *DefaultProcess) Pid() int {
-    return p.process.Pid
-}
-
-func (p *DefaultProcess) Kill() error {
-    return p.process.Kill()
+```go
+// ServiceInfo contains diagnostic information about a service
+type ServiceInfo struct {
+    Name         string        `json:"name"`
+    Configured   bool          `json:"configured"`
+    Enabled      bool          `json:"enabled"`
+    State        string        `json:"state"`
+    PID          int           `json:"pid,omitempty"`
+    Uptime       time.Duration `json:"uptime,omitempty"`
+    Restarts     int           `json:"restarts,omitempty"`
+    LastExitCode int           `json:"last_exit_code,omitempty"`
+    LastError    string        `json:"last_error,omitempty"`
 }
 ```
 
-### 2. Orchestrator Implementation
+### Error Handling
 
 ```go
-// ServiceProcess represents a running service process with state management
-type ServiceProcess struct {
-    Name        string
-    Command     ProcessCmd
-    PID         int
-    State       ProcessState
-    Started     time.Time
-    Restarts    int
-    LastError   error
-    StopCh      chan struct{}
-}
+// Common process-related error types for classification and handling
+var (
+    ErrServiceNotFound = errors.New("service not found")
+    ErrServiceDisabled = errors.New("service is disabled")
+    ErrAlreadyRunning = errors.New("service is already running")
+    ErrNotRunning = errors.New("service is not running")
+    ErrShuttingDown = errors.New("orchestrator is shutting down")
+    ErrConfigChanged = errors.New("configuration changed")
+    ErrBinaryNotFound = errors.New("service binary not found")
+    ErrTimeout = errors.New("operation timed out")
+    ErrMaxRestartsExceeded = errors.New("maximum restart attempts exceeded")
+)
 
+// ProcessError provides contextual information about process errors
+type ProcessError struct {
+    Service  string
+    Err      error
+    ExitCode int
+    PID      int
+    Context  string
+}
+```
+
+## Main Orchestrator Implementation
+
+The core Orchestrator type is the central component that manages services:
+
+```go
 // Orchestrator manages service processes
 type Orchestrator struct {
-    // Configuration from Configuration System
-    config        *config.OrchestratorConfig
-    services      map[string]*config.ServiceConfig
+    // Configuration
+    config      *configtypes.OrchestratorConfig
+    services    map[string]*configtypes.ServiceConfig
     
     // Process tracking
-    processes     map[string]*ServiceProcess
-    processLock   sync.RWMutex
+    processes   map[string]*ServiceProcess
+    processLock sync.RWMutex
     
     // Communication channels
-    sigCh         chan os.Signal
-    doneCh        chan struct{}
+    sigCh       chan os.Signal
+    doneCh      chan struct{}
     
     // Dependencies
-    logger        *zap.Logger
-    executor      ProcessExecutor
+    logger      *zap.Logger
+    executor    types.ProcessExecutor
+    
+    // Managers
+    serviceManager  *service.Manager
+    infoProvider    *service.InfoProvider
+    supervisor      *supervision.Supervisor
     
     // Control flags
     isShuttingDown atomic.Bool
 }
+```
 
-// OrchestratorOption allows configuring the orchestrator with functional options
+### Initialization with Functional Options
+
+```go
+// OrchestratorOption is a functional option to configure the orchestrator
 type OrchestratorOption func(*Orchestrator)
 
 // WithLogger sets a custom logger
@@ -200,24 +190,29 @@ func WithLogger(logger *zap.Logger) OrchestratorOption {
 }
 
 // WithExecutor sets a custom process executor
-func WithExecutor(executor ProcessExecutor) OrchestratorOption {
+func WithExecutor(exec types.ProcessExecutor) OrchestratorOption {
     return func(o *Orchestrator) {
-        o.executor = executor
+        o.executor = exec
     }
 }
 
-// NewOrchestrator creates a new process orchestrator
+// NewOrchestrator creates a new orchestrator
 func NewOrchestrator(configManager *config.ConfigManager, options ...OrchestratorOption) (*Orchestrator, error) {
-    // Get complete configuration 
+    // Get configuration
     cfg := configManager.GetConfig()
     
-    // Initialize orchestrator with configuration
+    // Initialize orchestrator with defaults
     o := &Orchestrator{
         config:      &cfg.Orchestrator,
-        services:    cfg.Services,
+        services:    make(map[string]*configtypes.ServiceConfig),
         processes:   make(map[string]*ServiceProcess),
         doneCh:      make(chan struct{}),
-        executor:    &DefaultProcessExecutor{},
+        executor:    executor.NewDefaultExecutor(),
+    }
+    
+    // Copy service configurations
+    for name, svcCfg := range cfg.Services {
+        o.services[name] = svcCfg
     }
     
     // Apply options
@@ -234,59 +229,34 @@ func NewOrchestrator(configManager *config.ConfigManager, options ...Orchestrato
         o.logger = logger
     }
     
+    // Initialize managers and components
+    o.serviceManager = service.NewManager(o.services, nil, &o.processLock, o.logger)
+    o.infoProvider = service.NewInfoProvider(o.services, nil, &o.processLock)
+    o.supervisor = supervision.NewSupervisor(o, supervision.SupervisorConfig{
+        AutoRestart:       o.config.AutoRestart,
+        MaxRestartAttempts: 10,
+        InitialBackoffMs:  1000,
+        MaxBackoffMs:      30000,
+    }, o.logger)
+    
     // Setup signal handling
     o.setupSignals()
     
-    // Verify services directory exists
-    if !dirExists(o.config.ServicesDir) {
-        return nil, fmt.Errorf("services directory not found: %s", o.config.ServicesDir)
-    }
+    // Create necessary directories
+    // (Simplified for clarity)
     
     // Subscribe to configuration changes
-    configManager.SubscribeToChanges(func(newConfig *config.Config) {
+    configManager.SubscribeToChanges(func(newConfig *configtypes.Config) {
         o.handleConfigChange(newConfig)
     })
     
     return o, nil
 }
-
-// handleConfigChange updates orchestrator with new configuration
-func (o *Orchestrator) handleConfigChange(newConfig *config.Config) {
-    o.processLock.Lock()
-    defer o.processLock.Unlock()
-    
-    o.logger.Info("Configuration update received")
-    
-    // Update configuration
-    o.config = &newConfig.Orchestrator
-    
-    // Check for removed services and stop them
-    for name := range o.services {
-        if _, exists := newConfig.Services[name]; !exists {
-            o.logger.Info("Service removed from configuration", zap.String("service", name))
-            process, exists := o.processes[name]
-            if exists && process.State != ProcessStateStopped {
-                // Schedule async stop to avoid deadlock (we already hold the lock)
-                go func(serviceName string) {
-                    if err := o.StopService(serviceName); err != nil {
-                        o.logger.Error("Failed to stop removed service", 
-                            zap.String("service", serviceName),
-                            zap.Error(err))
-                    }
-                }(name)
-            }
-        }
-    }
-    
-    // Update service configurations
-    o.services = newConfig.Services
-    
-    o.logger.Info("Configuration updated", 
-        zap.Int("num_services", len(o.services)))
-}
 ```
 
-### 3. Service Discovery and Process Management
+## Service Discovery and Process Management
+
+### Discovery Implementation
 
 ```go
 // DiscoverServices finds all service binaries in the services directory
@@ -294,8 +264,12 @@ func (o *Orchestrator) DiscoverServices() ([]string, error) {
     var services []string
     
     // Read services directory
+    o.logger.Info("Searching for services in directory", zap.String("directory", o.config.ServicesDir))
     entries, err := os.ReadDir(o.config.ServicesDir)
     if err != nil {
+        o.logger.Error("Failed to read services directory", 
+            zap.String("directory", o.config.ServicesDir),
+            zap.Error(err))
         return nil, fmt.Errorf("failed to read services directory: %w", err)
     }
     
@@ -306,9 +280,12 @@ func (o *Orchestrator) DiscoverServices() ([]string, error) {
             serviceBinaryPath := filepath.Join(o.config.ServicesDir, serviceName, serviceName)
             
             // Check if binary exists and is executable
-            if fileExists(serviceBinaryPath) && isExecutable(serviceBinaryPath) {
+            fileExistsResult := fileExists(serviceBinaryPath)
+            isExecutableResult := isExecutable(serviceBinaryPath)
+            
+            if fileExistsResult && isExecutableResult {
                 services = append(services, serviceName)
-                o.logger.Debug("Discovered service binary", 
+                o.logger.Info("Discovered service binary", 
                     zap.String("service", serviceName),
                     zap.String("path", serviceBinaryPath))
             }
@@ -326,192 +303,61 @@ func (o *Orchestrator) DiscoverServices() ([]string, error) {
     
     return services, nil
 }
+```
 
-// RefreshServices re-discovers services in the services directory
-func (o *Orchestrator) RefreshServices() ([]string, error) {
-    services, err := o.DiscoverServices()
-    if err != nil {
-        return nil, err
-    }
-    
-    o.processLock.Lock()
-    defer o.processLock.Unlock()
-    
-    // Log any newly discovered services
-    var newServices []string
-    for _, serviceName := range services {
-        if _, exists := o.services[serviceName]; !exists {
-            newServices = append(newServices, serviceName)
-        }
-    }
-    
-    if len(newServices) > 0 {
-        o.logger.Info("Discovered new services", 
-            zap.Strings("services", newServices))
-    }
-    
-    return services, nil
+### Lifecycle Management
+
+The lifecycle management functions implement the ProcessManager interface:
+
+```go
+// Start starts a specific service by name
+func (o *Orchestrator) Start(name string) error {
+    o.logger.Info("Starting service", zap.String("service", name))
+    return o.StartService(name)
 }
 
-// Start launches the orchestrator
-func (o *Orchestrator) Start() error {
-    // Initial service discovery
-    _, err := o.RefreshServices()
-    if err != nil {
-        o.logger.Warn("Initial service discovery failed", zap.Error(err))
-        // Continue anyway, this is not fatal
-    }
-    
-    o.logger.Info("Process orchestrator started")
-    return nil
+// Stop stops a running service
+func (o *Orchestrator) Stop(name string) error {
+    o.logger.Info("Stopping service", zap.String("service", name))
+    return o.StopService(name)
 }
 
-// StartService starts a specific service by name
-func (o *Orchestrator) StartService(name string) error {
+// Restart restarts a service
+func (o *Orchestrator) Restart(name string) error {
+    o.logger.Info("Restarting service", zap.String("service", name))
+    return o.RestartService(name)
+}
+
+// Status gets the current state of a service
+func (o *Orchestrator) Status(name string) (types.ProcessState, error) {
     o.processLock.RLock()
-    // Get service configuration 
-    serviceCfg, exists := o.services[name]
-    if !exists {
-        o.processLock.RUnlock()
-        return fmt.Errorf("no configuration found for service %s", name)
-    }
+    defer o.processLock.RUnlock()
     
-    // Skip disabled services
-    if !serviceCfg.Enabled {
-        o.logger.Info("Skipping disabled service", zap.String("service", name))
-        o.processLock.RUnlock()
-        return nil
-    }
-    
-    // Check if service is already running
     process, exists := o.processes[name]
-    o.processLock.RUnlock()
-    
-    if exists && process.State == ProcessStateRunning {
-        o.logger.Info("Service already running", zap.String("service", name))
-        return nil
+    if !exists {
+        // Check if it's configured but not running
+        if _, configExists := o.services[name]; configExists {
+            return types.ProcessStateStopped, nil
+        }
+        return "", fmt.Errorf("service %s not found", name)
     }
     
-    // Spawn the service process
-    return o.SpawnService(name)
+    return process.State, nil
 }
 
-// StartAll starts all enabled services
-func (o *Orchestrator) StartAll() error {
-    // Refresh available services
-    _, err := o.RefreshServices()
+// IsRunning checks if a service is running
+func (o *Orchestrator) IsRunning(name string) bool {
+    state, err := o.Status(name)
     if err != nil {
-        return fmt.Errorf("failed to refresh services: %w", err)
+        return false
     }
-    
-    // Start each service that is configured and enabled
-    var startErrors []string
-    var wg sync.WaitGroup
-    resultCh := make(chan error, len(o.services))
-    
-    // Lock to safely access the services map
-    o.processLock.RLock()
-    serviceConfigs := make(map[string]*config.ServiceConfig)
-    for name, cfg := range o.services {
-        if cfg.Enabled {
-            serviceConfigs[name] = cfg
-        }
-    }
-    o.processLock.RUnlock()
-    
-    // Start each enabled service in parallel
-    for serviceName := range serviceConfigs {
-        wg.Add(1)
-        go func(name string) {
-            defer wg.Done()
-            if err := o.StartService(name); err != nil {
-                o.logger.Error("Failed to start service", 
-                    zap.String("service", name),
-                    zap.Error(err))
-                resultCh <- fmt.Errorf("%s: %w", name, err)
-            }
-        }(serviceName)
-    }
-    
-    // Wait for all services to start
-    wg.Wait()
-    close(resultCh)
-    
-    // Collect any errors
-    for err := range resultCh {
-        startErrors = append(startErrors, err.Error())
-    }
-    
-    // Return error if any service failed to start
-    if len(startErrors) > 0 {
-        return fmt.Errorf("failed to start %d services: %s", 
-            len(startErrors), strings.Join(startErrors, "; "))
-    }
-    
-    return nil
-}
-
-// Stop gracefully shuts down the orchestrator
-func (o *Orchestrator) Stop() error {
-    o.logger.Info("Stopping all services and shutting down orchestrator")
-    
-    // Mark as shutting down to prevent restarts
-    o.isShuttingDown.Store(true)
-    
-    // Create a context with timeout for graceful shutdown
-    ctx, cancel := context.WithTimeout(
-        context.Background(),
-        time.Duration(o.config.ShutdownTimeout) * time.Second,
-    )
-    defer cancel()
-    
-    // Get a list of all running services
-    o.processLock.RLock()
-    services := make([]string, 0, len(o.processes))
-    for name, process := range o.processes {
-        if process.State == ProcessStateRunning || process.State == ProcessStateStarting {
-            services = append(services, name)
-        }
-    }
-    o.processLock.RUnlock()
-    
-    // Stop all services in parallel with the same deadline
-    var wg sync.WaitGroup
-    for _, name := range services {
-        wg.Add(1)
-        go func(serviceName string) {
-            defer wg.Done()
-            if err := o.StopService(serviceName); err != nil {
-                o.logger.Error("Failed to stop service",
-                    zap.String("service", serviceName),
-                    zap.Error(err))
-            }
-        }(name)
-    }
-    
-    // Wait for services to stop or timeout
-    stopped := make(chan struct{})
-    go func() {
-        wg.Wait()
-        close(stopped)
-    }()
-    
-    // Wait for either completion or timeout
-    select {
-    case <-stopped:
-        o.logger.Info("All services stopped gracefully")
-    case <-ctx.Done():
-        o.logger.Warn("Shutdown grace period exceeded, some services may not have stopped gracefully")
-    }
-    
-    // Close channels and resources
-    close(o.doneCh)
-    
-    return nil
+    return state == types.ProcessStateRunning
 }
 ```
 
-### 4. Process Spawning and Supervision
+## Process Spawning and Supervision
+
+### Process Spawning
 
 ```go
 // SpawnService starts a new service process
@@ -530,16 +376,10 @@ func (o *Orchestrator) SpawnService(name string) error {
         return fmt.Errorf("no configuration found for service %s", name)
     }
     
-    // Determine binary path - use configured path or default
-    binaryPath := serviceCfg.BinaryPath
-    if binaryPath == "" {
-        // Default to binary in service directory: servicesDir/name/name
-        binaryPath = filepath.Join(o.config.ServicesDir, name, name)
-    }
-    
-    // Ensure binary exists
-    if !fileExists(binaryPath) {
-        return fmt.Errorf("service binary not found at %s", binaryPath)
+    // Find binary path
+    binaryPath, err := isolation.FindServiceBinary(o.config.ServicesDir, name, serviceCfg.BinaryPath)
+    if err != nil {
+        return err
     }
     
     // Get current process if it exists
@@ -549,12 +389,12 @@ func (o *Orchestrator) SpawnService(name string) error {
         restartCount = existingProcess.Restarts
         
         // If already running, return
-        if existingProcess.State == ProcessStateRunning {
+        if existingProcess.State == types.ProcessStateRunning {
             return nil
         }
         
         // If restarting, increment counter
-        if existingProcess.State == ProcessStateRestarting {
+        if existingProcess.State == types.ProcessStateRestarting {
             restartCount++
         }
         
@@ -586,25 +426,24 @@ func (o *Orchestrator) SpawnService(name string) error {
     process := &ServiceProcess{
         Name:     name,
         Command:  cmd,
-        State:    ProcessStateStarting,
+        State:    types.ProcessStateStarting,
         Started:  time.Now(),
         Restarts: restartCount,
         StopCh:   stopCh,
     }
     
+    // Save wait function for later use by StopService
+    process.CommandWait = cmd.Wait
+    
     // Setup process output handling
-    setupProcessOutput(cmd, name, o.logger)
+    output.Setup(cmd, name, o.logger)
     
     // Setup process attributes for isolation
-    setupProcessIsolation(cmd, serviceCfg)
+    isolation.Setup(cmd, serviceCfg)
     
     // Start the process
     if err := cmd.Start(); err != nil {
-        return &ProcessError{
-            Service: name,
-            Err:     fmt.Errorf("failed to start: %w", err),
-            ExitCode: -1,
-        }
+        return fmt.Errorf("failed to start service %s: %w", name, err)
     }
     
     // Get PID
@@ -617,7 +456,15 @@ func (o *Orchestrator) SpawnService(name string) error {
     o.processes[name] = process
     
     // Begin supervision in a new goroutine
-    go o.supervise(name, stopCh)
+    go o.supervisor.Supervise(&supervision.ProcessInfo{
+        Name:     name,
+        Command:  cmd,
+        State:    types.ProcessStateStarting, 
+        PID:      process.PID,
+        Restarts: restartCount,
+        StopCh:   stopCh,
+        Started:  time.Now(),
+    }, o.isShuttingDown.Load)
     
     o.logger.Info("Started service", 
         zap.String("service", name),
@@ -625,134 +472,23 @@ func (o *Orchestrator) SpawnService(name string) error {
     
     return nil
 }
+```
 
-// StopService stops a running service
-func (o *Orchestrator) StopService(name string) error {
-    // Find process in process map
-    o.processLock.Lock()
-    process, exists := o.processes[name]
-    if !exists {
-        o.processLock.Unlock()
-        return fmt.Errorf("service %s not found", name)
-    }
-    
-    // Check if already stopped
-    if process.State == ProcessStateStopped {
-        o.processLock.Unlock()
-        return nil
-    }
-    
-    // Update status and get stop channel
-    process.State = ProcessStateStopped
-    stopCh := process.StopCh
-    pid := process.PID
-    o.processLock.Unlock()
-    
-    // Send stop signal to supervision goroutine
-    if stopCh != nil {
-        close(stopCh)
-    }
-    
-    o.logger.Info("Sending SIGTERM to service", 
-        zap.String("service", name),
-        zap.Int("pid", pid))
-    
-    // Send SIGTERM for graceful shutdown
-    if err := o.sendSignal(name, syscall.SIGTERM); err != nil {
-        o.logger.Warn("Failed to send SIGTERM", 
-            zap.String("service", name),
-            zap.Error(err))
-    }
-    
-    // Wait for process to exit with timeout
-    exitChan := make(chan error, 1)
-    go func() {
-        o.processLock.RLock()
-        process, exists := o.processes[name]
-        if !exists || process.Command == nil {
-            o.processLock.RUnlock()
-            exitChan <- nil
-            return
-        }
-        o.processLock.RUnlock()
-        
-        exitErr := process.Command.Wait()
-        exitChan <- exitErr
-    }()
-    
-    // Wait for exit or timeout
-    select {
-    case err := <-exitChan:
-        if err != nil {
-            o.logger.Warn("Error waiting for service to exit",
-                zap.String("service", name),
-                zap.Error(err))
-        }
-    case <-time.After(time.Duration(o.config.ShutdownTimeout) * time.Second):
-        // Timeout occurred, force kill
-        o.logger.Warn("Service did not exit gracefully, sending SIGKILL",
-            zap.String("service", name),
-            zap.Int("pid", pid))
-        
-        if err := o.sendSignal(name, syscall.SIGKILL); err != nil {
-            o.logger.Error("Failed to send SIGKILL",
-                zap.String("service", name),
-                zap.Error(err))
-            return &ProcessError{
-                Service:  name,
-                Err:      fmt.Errorf("failed to forcefully terminate: %w", err),
-                ExitCode: -1,
-            }
-        }
-    }
-    
-    o.logger.Info("Service stopped", zap.String("service", name))
-    return nil
-}
+### Process Supervision
 
-// RestartService restarts a running service
-func (o *Orchestrator) RestartService(name string) error {
-    o.logger.Info("Restarting service", zap.String("service", name))
+```go
+// Supervise monitors a process and restarts it if it fails
+func (s *Supervisor) Supervise(process *ProcessInfo, isShuttingDown func() bool) {
+    s.logger.Debug("Starting supervision for service", zap.String("service", process.Name))
     
-    o.processLock.Lock()
-    process, exists := o.processes[name]
-    if exists {
-        process.State = ProcessStateRestarting
-    }
-    o.processLock.Unlock()
-    
-    // Stop the service
-    if err := o.StopService(name); err != nil {
-        // Log but continue, as we'll try to start anyway
-        o.logger.Warn("Error stopping service during restart",
-            zap.String("service", name),
-            zap.Error(err))
-    }
-    
-    // Start the service
-    return o.StartService(name)
-}
-
-// supervise monitors a service and restarts it if needed
-func (o *Orchestrator) supervise(name string, stopCh chan struct{}) {
-    o.logger.Debug("Starting supervision for service", zap.String("service", name))
-    
-    o.processLock.RLock()
-    process, exists := o.processes[name]
-    if !exists || process.Command == nil {
-        o.processLock.RUnlock()
-        o.logger.Error("Invalid process state for supervision", 
-            zap.String("service", name))
+    if process == nil || process.Command == nil {
+        s.logger.Error("Invalid process state for supervision", 
+            zap.String("service", process.Name))
         return
     }
-    o.processLock.RUnlock()
     
     // Mark as running
-    o.processLock.Lock()
-    if process, exists := o.processes[name]; exists {
-        process.State = ProcessStateRunning
-    }
-    o.processLock.Unlock()
+    process.State = types.ProcessStateRunning
     
     // Wait for either process exit or stop signal
     exitChan := make(chan error, 1)
@@ -766,19 +502,19 @@ func (o *Orchestrator) supervise(name string, stopCh chan struct{}) {
     select {
     case exitErr = <-exitChan:
         // Process exited on its own
-    case <-stopCh:
+    case <-process.StopCh:
         // Stop requested, return immediately
         return
     }
     
     // Check if shutting down
-    if o.isShuttingDown.Load() {
-        o.logger.Info("Service exited during shutdown",
-            zap.String("service", name))
+    if isShuttingDown() {
+        s.logger.Info("Service exited during shutdown",
+            zap.String("service", process.Name))
         return
     }
     
-    // Process exited unexpectedly
+    // Process exited
     exitCode := 0
     if exitErr != nil {
         if exitError, ok := exitErr.(*exec.ExitError); ok {
@@ -786,330 +522,74 @@ func (o *Orchestrator) supervise(name string, stopCh chan struct{}) {
         }
     }
     
-    o.logger.Warn("Service exited unexpectedly",
-        zap.String("service", name),
-        zap.Int("exit_code", exitCode),
-        zap.Error(exitErr))
-    
-    // Update status to failed
-    o.processLock.Lock()
-    process, exists = o.processes[name]
-    if exists {
-        process.State = ProcessStateFailed
-        process.LastError = &ProcessError{
-            Service:  name,
-            Err:      exitErr,
-            ExitCode: exitCode,
-        }
+    // Check if exit was successful or failed
+    if exitCode != 0 || exitErr != nil {
+        // Process exited with error
+        s.logger.Warn("Service exited unexpectedly",
+            zap.String("service", process.Name),
+            zap.Int("exit_code", exitCode),
+            zap.Error(exitErr))
+        
+        // Update status to failed and store error
+        process.State = types.ProcessStateFailed
+        process.LastError = fmt.Errorf("service exited with code %d: %w", exitCode, exitErr)
     }
-    o.processLock.Unlock()
     
     // Check if restart is enabled
-    if !o.config.AutoRestart {
-        o.logger.Info("Auto-restart disabled, not restarting service",
-            zap.String("service", name))
+    if !s.config.AutoRestart {
+        s.logger.Info("Auto-restart disabled, not restarting service",
+            zap.String("service", process.Name))
         return
     }
     
-    // Get current restart count
-    o.processLock.RLock()
-    restartCount := 0
-    if proc, exists := o.processes[name]; exists {
-        restartCount = proc.Restarts
-    }
-    o.processLock.RUnlock()
-    
     // Check if maximum restart limit is reached
-    const maxRestartAttempts = 10
-    if restartCount >= maxRestartAttempts {
-        o.logger.Error("Service reached maximum restart attempts, not restarting",
-            zap.String("service", name),
-            zap.Int("restarts", restartCount))
+    if process.Restarts >= s.config.MaxRestartAttempts {
+        s.logger.Error("Service reached maximum restart attempts, not restarting",
+            zap.String("service", process.Name),
+            zap.Int("restarts", process.Restarts))
         return
     }
     
     // Calculate exponential backoff
-    backoffDelay := calculateBackoffDelay(restartCount)
+    backoffDelay := CalculateBackoffDelay(process.Restarts, s.config.InitialBackoffMs, s.config.MaxBackoffMs)
     
-    o.logger.Info("Restarting service after backoff",
-        zap.String("service", name),
+    s.logger.Info("Restarting service after backoff",
+        zap.String("service", process.Name),
         zap.Duration("backoff", backoffDelay),
-        zap.Int("restart_count", restartCount))
+        zap.Int("restart_count", process.Restarts))
         
     // Wait for backoff period or stop signal
     select {
     case <-time.After(backoffDelay):
         // Backoff completed, restart service
-    case <-stopCh:
+    case <-process.StopCh:
         // Stop requested during backoff, exit
         return
     }
     
     // Restart the service
-    if err := o.SpawnService(name); err != nil {
-        o.logger.Error("Failed to restart service",
-            zap.String("service", name),
+    if err := s.spawner.SpawnProcess(process.Name); err != nil {
+        s.logger.Error("Failed to restart service",
+            zap.String("service", process.Name),
             zap.Error(err))
     }
 }
-
-// calculateBackoffDelay implements exponential backoff with jitter
-func calculateBackoffDelay(restartCount int) time.Duration {
-    // Base delay and max delay in milliseconds
-    const (
-        initialDelay = 1000  // 1 second
-        maxDelay     = 30000 // 30 seconds
-    )
-    
-    // Calculate exponential backoff
-    delayMs := math.Min(
-        float64(initialDelay) * math.Pow(2, float64(restartCount)),
-        float64(maxDelay),
-    )
-    
-    // Add jitter (± 10%)
-    jitterFactor := 0.9 + (0.2 * rand.Float64())
-    delayMs = delayMs * jitterFactor
-    
-    return time.Duration(delayMs) * time.Millisecond
-}
 ```
 
-### 5. Process Utilities 
+## Process Isolation and Resource Management
 
 ```go
-// sendSignal sends a signal to a process
-func (o *Orchestrator) sendSignal(name string, sig syscall.Signal) error {
-    o.processLock.RLock()
-    process, exists := o.processes[name]
-    if !exists || process.PID <= 0 {
-        o.processLock.RUnlock()
-        return fmt.Errorf("process %s not found or not running", name)
-    }
-    o.processLock.RUnlock()
-    
-    // Send signal to process group to ensure all child processes receive it
-    pgid, err := syscall.Getpgid(process.PID)
-    if err != nil {
-        return fmt.Errorf("failed to get process group: %w", err)
-    }
-    
-    if err := syscall.Kill(-pgid, sig); err != nil {
-        return fmt.Errorf("failed to send signal: %w", err)
-    }
-    
-    return nil
-}
-
-// GetServiceInfo returns diagnostic information about a service
-func (o *Orchestrator) GetServiceInfo(name string) (*ServiceInfo, error) {
-    o.processLock.RLock()
-    defer o.processLock.RUnlock()
-    
-    // Check if service is configured
-    serviceCfg, exists := o.services[name]
-    if !exists {
-        return nil, fmt.Errorf("service %s not configured", name)
-    }
-    
-    // Get process info if running
-    process, exists := o.processes[name]
-    if !exists {
-        return &ServiceInfo{
-            Name:      name,
-            Configured: true,
-            Enabled:   serviceCfg.Enabled,
-            State:     string(ProcessStateStopped),
-        }, nil
-    }
-    
-    // Build service info
-    info := &ServiceInfo{
-        Name:       name,
-        Configured: true,
-        Enabled:    serviceCfg.Enabled,
-        State:      string(process.State),
-        PID:        process.PID,
-        Uptime:     time.Since(process.Started),
-        Restarts:   process.Restarts,
-    }
-    
-    // Add error info if available
-    if process.LastError != nil {
-        if procErr, ok := process.LastError.(*ProcessError); ok {
-            info.LastExitCode = procErr.ExitCode
-            info.LastError = procErr.Error()
-        } else {
-            info.LastError = process.LastError.Error()
-        }
-    }
-    
-    return info, nil
-}
-
-// GetAllServices returns information about all services
-func (o *Orchestrator) GetAllServices() (map[string]*ServiceInfo, error) {
-    o.processLock.RLock()
-    defer o.processLock.RUnlock()
-    
-    services := make(map[string]*ServiceInfo)
-    
-    // Add all configured services
-    for name, cfg := range o.services {
-        info := &ServiceInfo{
-            Name:       name,
-            Configured: true,
-            Enabled:    cfg.Enabled,
-            State:      string(ProcessStateStopped),
-        }
-        
-        // Add process info if running
-        if process, exists := o.processes[name]; exists {
-            info.State = string(process.State)
-            info.PID = process.PID
-            info.Uptime = time.Since(process.Started)
-            info.Restarts = process.Restarts
-            
-            // Add error info if available
-            if process.LastError != nil {
-                if procErr, ok := process.LastError.(*ProcessError); ok {
-                    info.LastExitCode = procErr.ExitCode
-                    info.LastError = procErr.Error()
-                } else {
-                    info.LastError = process.LastError.Error()
-                }
-            }
-        }
-        
-        services[name] = info
-    }
-    
-    return services, nil
-}
-
-// ServiceInfo contains diagnostic information about a service
-type ServiceInfo struct {
-    Name         string        `json:"name"`
-    Configured   bool          `json:"configured"`
-    Enabled      bool          `json:"enabled"`
-    State        string        `json:"state"`
-    PID          int           `json:"pid,omitempty"`
-    Uptime       time.Duration `json:"uptime,omitempty"`
-    Restarts     int           `json:"restarts,omitempty"`
-    LastExitCode int           `json:"last_exit_code,omitempty"`
-    LastError    string        `json:"last_error,omitempty"`
-}
-```
-
-### 6. Process Output Handling
-
-```go
-// setupProcessOutput configures stdout/stderr handling for the process
-func setupProcessOutput(cmd ProcessCmd, serviceName string, logger *zap.Logger) {
-    // Create service logger
-    serviceLogger := logger.With(zap.String("service", serviceName))
-    
-    // Create prefixed writers for stdout and stderr
-    stdout := newPrefixedLogWriter(serviceLogger, serviceName, false)
-    stderr := newPrefixedLogWriter(serviceLogger, serviceName, true)
-    
-    // Attach to command
-    cmd.SetOutput(stdout, stderr)
-}
-
-// prefixedLogWriter writes process output to a logger
-type prefixedLogWriter struct {
-    logger     *zap.Logger
-    service    string
-    isError    bool
-    buffer     bytes.Buffer
-    bufferLock sync.Mutex
-}
-
-// newPrefixedLogWriter creates a new prefixed log writer
-func newPrefixedLogWriter(logger *zap.Logger, service string, isError bool) *prefixedLogWriter {
-    return &prefixedLogWriter{
-        logger:  logger,
-        service: service,
-        isError: isError,
-    }
-}
-
-// Write implements io.Writer
-func (w *prefixedLogWriter) Write(p []byte) (n int, err error) {
-    w.bufferLock.Lock()
-    defer w.bufferLock.Unlock()
-    
-    // Write to buffer
-    n, err = w.buffer.Write(p)
-    if err != nil {
-        return n, err
-    }
-    
-    // Process complete lines
-    for {
-        line, err := w.buffer.ReadString('\n')
-        if err == io.EOF {
-            // Put back incomplete line
-            w.buffer.WriteString(line)
-            break
-        }
-        
-        // Trim trailing newline
-        line = strings.TrimSuffix(line, "\n")
-        if line == "" {
-            continue
-        }
-        
-        // Log the line
-        if w.isError {
-            w.logger.Error(line, zap.String("source", "stderr"))
-        } else {
-            w.logger.Info(line, zap.String("source", "stdout"))
-        }
-    }
-    
-    return n, nil
-}
-```
-
-### 7. Signal Handling
-
-```go
-// setupSignals initializes signal handling
-func (o *Orchestrator) setupSignals() {
-    o.sigCh = make(chan os.Signal, 1)
-    signal.Notify(o.sigCh, syscall.SIGINT, syscall.SIGTERM)
-    
-    go func() {
-        sig := <-o.sigCh
-        o.logger.Info("Received signal", zap.String("signal", sig.String()))
-        o.Stop()
-    }()
-}
-
-// IsShuttingDown returns true if the orchestrator is in the process of shutting down
-func (o *Orchestrator) IsShuttingDown() bool {
-    return o.isShuttingDown.Load()
-}
-```
-
-### 8. Process Isolation
-
-```go
-// setupProcessIsolation configures process isolation and resource limits
-func setupProcessIsolation(cmd ProcessCmd, serviceCfg *config.ServiceConfig) {
-    // Set process group ID and other system attributes
-    if cmd, ok := cmd.(*DefaultProcessCmd); ok && cmd.cmd != nil {
-        cmd.cmd.SysProcAttr = &syscall.SysProcAttr{
-            Setpgid: true, // Create new process group for better signal handling
-        }
+// Setup configures process isolation settings for a command
+func Setup(cmd processtypes.ProcessCmd, serviceCfg *types.ServiceConfig) {
+    // Set working directory if specified
+    if serviceCfg.DataDir != "" {
+        cmd.SetDir(serviceCfg.DataDir)
     }
     
     // Create a clean environment
     cleanEnv := []string{
         "PATH=" + os.Getenv("PATH"),
-        "HOME=" + serviceCfg.DataDir,
+        "HOME=" + os.Getenv("HOME"),
         "TEMP=" + os.TempDir(),
         "TMP=" + os.TempDir(),
     }
@@ -1128,408 +608,246 @@ func setupProcessIsolation(cmd ProcessCmd, serviceCfg *config.ServiceConfig) {
     
     // Set the environment variables
     cmd.SetEnv(cleanEnv)
-    
-    // Set working directory if specified
-    if serviceCfg.DataDir != "" {
-        cmd.SetDir(serviceCfg.DataDir)
-    }
 }
 ```
 
-## Testing Approach
-
-The simplified implementation enables much more comprehensive testing through the use of interfaces and dependency injection:
-
-### 1. Unit Tests with Mocking
+## Process Output Handling
 
 ```go
-// Define mock executor for testing
-type MockProcessExecutor struct {
-    CommandFunc func(path string, args ...string) ProcessCmd
+// Setup configures process output handling
+func Setup(cmd types.ProcessCmd, serviceName string, logger *zap.Logger) {
+    // Create service logger
+    serviceLogger := logger.With(zap.String("service", serviceName))
+    
+    // Create output handler
+    handler := NewHandler(serviceLogger, serviceName)
+    
+    // Connect to process outputs
+    cmd.SetOutput(handler.Writer(false), handler.Writer(true))
 }
 
-func (m *MockProcessExecutor) Command(path string, args ...string) ProcessCmd {
-    if m.CommandFunc != nil {
-        return m.CommandFunc(path, args...)
+// Handler manages service process output
+type Handler struct {
+    logger      *zap.Logger
+    serviceName string
+    stdoutBuf   *lineBuffer
+    stderrBuf   *lineBuffer
+}
+
+// Writer returns a writer for stdout or stderr
+func (h *Handler) Writer(isStderr bool) io.Writer {
+    if isStderr {
+        return h.stderrBuf
     }
-    return &MockProcessCmd{}
+    return h.stdoutBuf
 }
 
-// Mock command for testing
-type MockProcessCmd struct {
-    StartFunc  func() error
-    WaitFunc   func() error
-    ProcessFunc func() Process
-    
-    // Track method calls for verification
-    StartCalled  bool
-    WaitCalled   bool
-    Env          []string
-    Dir          string
-    Stdout       io.Writer
-    Stderr       io.Writer
-}
-
-func (m *MockProcessCmd) Start() error {
-    m.StartCalled = true
-    if m.StartFunc != nil {
-        return m.StartFunc()
-    }
-    return nil
-}
-
-func (m *MockProcessCmd) Wait() error {
-    m.WaitCalled = true
-    if m.WaitFunc != nil {
-        return m.WaitFunc()
-    }
-    return nil
-}
-
-func (m *MockProcessCmd) SetEnv(env []string) {
-    m.Env = env
-}
-
-func (m *MockProcessCmd) SetDir(dir string) {
-    m.Dir = dir
-}
-
-func (m *MockProcessCmd) SetOutput(stdout, stderr io.Writer) {
-    m.Stdout = stdout
-    m.Stderr = stderr
-}
-
-func (m *MockProcessCmd) Signal(sig os.Signal) error {
-    return nil
-}
-
-func (m *MockProcessCmd) Process() Process {
-    if m.ProcessFunc != nil {
-        return m.ProcessFunc()
-    }
-    return &MockProcess{pid: 1000}
-}
-
-// Mock process for testing
-type MockProcess struct {
-    pid int
-}
-
-func (m *MockProcess) Pid() int {
-    return m.pid
-}
-
-func (m *MockProcess) Kill() error {
-    return nil
-}
-
-// Test the orchestrator with mocks
-func TestOrchestrator_UnitTests(t *testing.T) {
-    // Create mock config manager
-    configManager := &MockConfigManager{
-        GetConfigFunc: func() *config.Config {
-            return &config.Config{
-                Orchestrator: config.OrchestratorConfig{
-                    ServicesDir:    "/tmp/services",
-                    AutoRestart:    true,
-                    ShutdownTimeout: 30,
-                },
-                Services: map[string]*config.ServiceConfig{
-                    "test-service": {
-                        Enabled:   true,
-                        DataDir:   "/tmp/services/test-service/data",
-                        Args:      []string{"--debug"},
-                    },
-                },
-            }
-        },
-    }
-    
-    // Create mock process executor
-    mockExec := &MockProcessExecutor{
-        CommandFunc: func(path string, args ...string) ProcessCmd {
-            return &MockProcessCmd{
-                StartFunc: func() error { return nil },
-                WaitFunc: func() error { return nil },
-                ProcessFunc: func() Process {
-                    return &MockProcess{pid: 1000}
-                },
-            }
-        },
-    }
-    
-    // Setup file system tests by simulating servicesDir
-    setupTestDir(t, "/tmp/services/test-service")
-    
-    // Create orchestrator with mocks
-    orch, err := NewOrchestrator(configManager, WithExecutor(mockExec))
-    require.NoError(t, err)
-    
-    // Test starting a service
-    t.Run("StartService", func(t *testing.T) {
-        err := orch.StartService("test-service")
-        require.NoError(t, err)
-        
-        // Verify service is marked as running
-        info, err := orch.GetServiceInfo("test-service")
-        require.NoError(t, err)
-        assert.Equal(t, "running", info.State)
-        assert.Equal(t, 1000, info.PID)
-    })
-    
-    // Test stopping a service
-    t.Run("StopService", func(t *testing.T) {
-        err := orch.StopService("test-service")
-        require.NoError(t, err)
-        
-        // Verify service is marked as stopped
-        info, err := orch.GetServiceInfo("test-service")
-        require.NoError(t, err)
-        assert.Equal(t, "stopped", info.State)
-    })
-    
-    // Test restarting a service
-    t.Run("RestartService", func(t *testing.T) {
-        err := orch.StartService("test-service")
-        require.NoError(t, err)
-        
-        err = orch.RestartService("test-service")
-        require.NoError(t, err)
-        
-        // Verify service is marked as running with restart count incremented
-        info, err := orch.GetServiceInfo("test-service")
-        require.NoError(t, err)
-        assert.Equal(t, "running", info.State)
-        assert.Equal(t, 1, info.Restarts)
-    })
+// Write implements io.Writer for line-buffered logging
+func (b *lineBuffer) Write(p []byte) (n int, err error) {
+    // Line buffering implementation
+    // ...
 }
 ```
 
-### 2. Integration Tests with Real Processes
+## Shutdown and Signal Handling
 
 ```go
-// Integration tests with real processes
-func TestOrchestrator_Integration(t *testing.T) {
-    if testing.Short() {
-        t.Skip("Skipping integration tests in short mode")
-    }
+// Shutdown gracefully shuts down the orchestrator and all managed services
+func (o *Orchestrator) Shutdown(ctx context.Context) error {
+    o.logger.Info("Orchestrator shutdown requested")
     
-    // Create test service binaries
-    tempDir := t.TempDir()
-    servicesDir := filepath.Join(tempDir, "services")
-    require.NoError(t, os.MkdirAll(servicesDir, 0755))
+    // Mark as shutting down to prevent restarts
+    o.isShuttingDown.Store(true)
     
-    // Build test binaries
-    successBin := buildTestBinary(t, servicesDir, "success", 0)
-    failureBin := buildTestBinary(t, servicesDir, "failure", 1)
-    
-    // Create config manager
-    configManager := &MockConfigManager{
-        GetConfigFunc: func() *config.Config {
-            return &config.Config{
-                Orchestrator: config.OrchestratorConfig{
-                    ServicesDir:    servicesDir,
-                    AutoRestart:    true,
-                    ShutdownTimeout: 5,
-                },
-                Services: map[string]*config.ServiceConfig{
-                    "success": {
-                        Enabled:   true,
-                        DataDir:   filepath.Join(servicesDir, "success", "data"),
-                    },
-                    "failure": {
-                        Enabled:   true,
-                        DataDir:   filepath.Join(servicesDir, "failure", "data"),
-                    },
-                },
-            }
-        },
-    }
-    
-    // Create orchestrator with real process executor
-    orch, err := NewOrchestrator(configManager)
-    require.NoError(t, err)
-    
-    // Test starting a successful service
-    t.Run("StartSuccessService", func(t *testing.T) {
-        err := orch.StartService("success")
-        require.NoError(t, err)
-        
-        // Verify service is running
-        info, err := orch.GetServiceInfo("success")
-        require.NoError(t, err)
-        assert.Equal(t, "running", info.State)
-        assert.Greater(t, info.PID, 0)
-        
-        // Let it run for a moment
-        time.Sleep(500 * time.Millisecond)
-        
-        // Stop the service
-        err = orch.StopService("success")
-        require.NoError(t, err)
-    })
-    
-    // Test service that fails and gets restarted
-    t.Run("RestartFailingService", func(t *testing.T) {
-        // Set a smaller restart interval for faster testing
-        setTestRestartDelay(t, orch)
-        
-        err := orch.StartService("failure")
-        require.NoError(t, err)
-        
-        // Wait for it to fail and attempt restart (up to 3 seconds)
-        deadline := time.Now().Add(3 * time.Second)
-        var info *ServiceInfo
-        for time.Now().Before(deadline) {
-            info, err = orch.GetServiceInfo("failure")
-            require.NoError(t, err)
-            
-            // If we see a restart count > 0, test passed
-            if info.Restarts > 0 {
-                break
-            }
-            time.Sleep(100 * time.Millisecond)
+    // Get a list of all running services
+    o.processLock.RLock()
+    services := make([]string, 0, len(o.processes))
+    for name, process := range o.processes {
+        if process.State == types.ProcessStateRunning || process.State == types.ProcessStateStarting {
+            services = append(services, name)
         }
-        
-        assert.Greater(t, info.Restarts, 0, "Service should have restarted at least once")
-        assert.Equal(t, 1, info.LastExitCode)
-        
-        // Stop the service
-        err = orch.StopService("failure")
-        require.NoError(t, err)
-    })
+    }
+    o.processLock.RUnlock()
     
-    // Test orchestrator shutdown
-    t.Run("OrchestratorShutdown", func(t *testing.T) {
-        // Start both services
-        err := orch.StartAll()
-        require.NoError(t, err)
-        
-        // Stop all services
-        err = orch.Stop()
-        require.NoError(t, err)
-        
-        // Verify all services are stopped
-        services, err := orch.GetAllServices()
-        require.NoError(t, err)
-        
-        for name, info := range services {
-            assert.Equal(t, "stopped", info.State, "Service %s should be stopped", name)
-        }
-    })
-}
-
-// Helper to build test binaries
-func buildTestBinary(t *testing.T, dir, name string, exitCode int) string {
-    // Create service directory
-    serviceDir := filepath.Join(dir, name)
-    require.NoError(t, os.MkdirAll(serviceDir, 0755))
+    // Create wait group for stopping services
+    var wg sync.WaitGroup
+    errCh := make(chan error, len(services))
     
-    // Create data directory
-    dataDir := filepath.Join(serviceDir, "data")
-    require.NoError(t, os.MkdirAll(dataDir, 0755))
-    
-    // Create source file
-    srcPath := filepath.Join(t.TempDir(), name+".go")
-    src := fmt.Sprintf(`
-package main
-
-import (
-    "fmt"
-    "os"
-    "time"
-)
-
-func main() {
-    fmt.Println("Starting test service: %s")
-    fmt.Println("Arguments:", os.Args)
-    fmt.Println("Environment:")
-    for _, env := range os.Environ() {
-        fmt.Println(" ", env)
+    // Stop all services in parallel
+    for _, name := range services {
+        wg.Add(1)
+        go func(serviceName string) {
+            defer wg.Done()
+            if err := o.StopService(serviceName); err != nil {
+                o.logger.Error("Failed to stop service during shutdown",
+                    zap.String("service", serviceName),
+                    zap.Error(err))
+                errCh <- fmt.Errorf("failed to stop %s: %w", serviceName, err)
+            }
+        }(name)
     }
     
-    // Sleep briefly if not failure service
-    if %d == 0 {
-        time.Sleep(1 * time.Hour) // Long sleep for success service
-    } else {
-        time.Sleep(100 * time.Millisecond) // Brief sleep then exit
+    // Wait for all services to stop or context to be done
+    done := make(chan struct{})
+    go func() {
+        wg.Wait()
+        close(done)
+    }()
+    
+    // Wait for either completion or context done
+    select {
+    case <-done:
+        o.logger.Info("All services stopped gracefully")
+    case <-ctx.Done():
+        return fmt.Errorf("shutdown context canceled: %w", ctx.Err())
     }
     
-    os.Exit(%d)
-}
-`, name, exitCode, exitCode)
+    // Close channels
+    close(errCh)
+    close(o.doneCh)
     
-    require.NoError(t, os.WriteFile(srcPath, []byte(src), 0644))
-    
-    // Build binary
-    binPath := filepath.Join(serviceDir, name)
-    cmd := exec.Command("go", "build", "-o", binPath, srcPath)
-    output, err := cmd.CombinedOutput()
-    require.NoError(t, err, "Failed to build test binary: %s", output)
-    
-    return binPath
+    return nil
 }
 ```
 
-## Implementation Steps
+## Integration Tests
 
-1. Implement the core interfaces and types:
-   - ProcessState, ProcessError
-   - ProcessManager, ProcessExecutor, ProcessCmd interfaces
-   - Default implementations for interfaces
+The Process Orchestrator is tested with integration tests that verify:
 
-2. Implement the Orchestrator struct and constructor:
-   - Add functional options for dependency injection
-   - Implement configuration integration
+1. Basic service lifecycle (start, stop)
+2. Service auto-restart capability
+3. Multi-service orchestration
+4. Signal handling
+5. Shutdown behavior
 
-3. Develop the service discovery functions:
-   - DiscoverServices, RefreshServices
-   - Add service tracking
+```go
+// TestStartAndStopService tests starting and stopping a service
+func TestStartAndStopService(t *testing.T) {
+    // ...
+}
 
-4. Implement process management functions:
-   - StartService, StartAll, StopService
-   - RestartService and service info functions
+// TestServiceAutoRestart tests service auto-restart capability
+func TestServiceAutoRestart(t *testing.T) {
+    // ...
+}
 
-5. Create process spawning and supervision:
-   - SpawnService with proper isolation
-   - supervise with exponential backoff
-   - Restart error handling
+// TestMultiServiceOrchestration tests orchestrating multiple services
+func TestMultiServiceOrchestration(t *testing.T) {
+    // ...
+}
 
-6. Add process output handling:
-   - Implement prefixedLogWriter
-   - Line buffering and logger integration
+// TestSignalHandling tests proper signal handling by services
+func TestSignalHandling(t *testing.T) {
+    // ...
+}
+```
 
-7. Implement signal handling:
-   - Setup signal capture and forwarding
-   - Process group signaling
+## Completed Features
 
-8. Create unit and integration tests:
-   - Develop mock implementations
-   - Create integration tests with real binaries
+The Process Orchestrator implementation successfully includes:
+
+1. **Service Discovery**:
+   - Dynamic service binary discovery
+   - Support for custom binary paths
+   - Executable verification
+
+2. **Process Management**:
+   - Start, stop, restart operations
+   - Service status information
+   - Clean environment setup
+   - Working directory management
+
+3. **Process Supervision**:
+   - Automatic restart of failed services
+   - Exponential backoff with jitter
+   - Maximum restart attempt limiting
+   - Process state tracking
+
+4. **Signal Handling**:
+   - Graceful shutdown with SIGTERM
+   - Force kill with SIGKILL after timeout
+   - Propagation of system signals
+
+5. **Resource Management**:
+   - Environment variable isolation
+   - Basic memory limits via GOMEMLIMIT
+   - Working directory isolation
+
+6. **Output Handling**:
+   - Structured logging of process output
+   - Line buffering for complete log lines
+   - Tagging with service metadata
+
+7. **Configuration Integration**:
+   - Dynamic configuration updates
+   - Service-specific configurations
+   - Default values with overrides
+
+8. **Extensibility**:
+   - Modular component architecture
+   - Interface-based design
+   - Dependency injection
+
+## New Features Beyond Original Plan
+
+The implemented orchestrator includes several enhancements beyond the original simplified plan:
+
+1. **Component Separation**: The orchestrator is divided into specialized subpackages for better separation of concerns:
+   - `service`: Service lifecycle management
+   - `supervision`: Process monitoring and restart logic
+   - `isolation`: Resource limits and environment setup
+   - `output`: Structured output handling
+   - `executor`: Process execution abstraction
+
+2. **Context-Based Shutdown**: Timeout-aware shutdown using context.Context for better cancellation support.
+
+3. **Enhanced Error Types**: More comprehensive error handling with detailed context and helper functions.
+
+4. **Directory Management**: Automatic creation of necessary directories if they don't exist.
+
+5. **Robust Service Discovery**: More sophisticated service binary discovery with better error reporting.
+
+6. **Parallel Service Operations**: Concurrent starting and stopping of services with proper synchronization.
+
+7. **Restartable Config Manager**: Integration with a configuration manager that supports live updates.
+
+8. **Detailed Service Information**: More comprehensive service diagnostic information.
+
+9. **Memory Limits**: Go services can utilize GOMEMLIMIT environment variable for memory constraints.
+
+10. **Improved Signal Handling**: More sophisticated signal propagation and handling.
 
 ## Future Enhancements
 
+Several areas could be enhanced in future iterations:
+
 1. **Advanced Resource Management**:
-   - CPU allocation and quota enforcement
-   - Memory limit enforcement with cgroups
+   - CPU allocation and quota enforcement with cgroups
+   - Network bandwidth limiting
    - Disk I/O prioritization
 
 2. **Enhanced Security**:
-   - Binary verification with checksums
-   - Privilege dropping for services
-   - Namespaces for stronger isolation
+   - User namespace isolation
+   - Capability-based security
+   - Network namespaces
+   - Seccomp profiles
 
 3. **Dependency-Aware Process Management**:
    - Service dependency resolution
    - Start ordering based on dependencies
    - Health-based dependency validation
 
-4. **Advanced Health Checking**:
+4. **Health Checking System**:
    - Protocol-based health checking (HTTP, gRPC)
    - Customizable liveness and readiness probes
    - Automatic recovery based on health status
 
 5. **Observability Enhancements**:
-   - Prometheus metrics for process health
-   - Process profiling integration
-   - Detailed resource usage tracking
+   - Prometheus metrics integration
+   - Process profiling support
+   - Resource usage tracking
+
+6. **Upgrade Management**:
+   - Zero-downtime binary upgrades
+   - Rollback support
+   - Version tracking
