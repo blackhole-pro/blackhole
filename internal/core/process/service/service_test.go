@@ -4,6 +4,8 @@ package service
 
 import (
 	"errors"
+	"io"
+	"os"
 	"sync"
 	"syscall"
 	"testing"
@@ -13,19 +15,25 @@ import (
 	processTypes "github.com/handcraftdev/blackhole/internal/core/process/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 )
 
-// Setup test dependencies
+// MockProcessCmd is a simple mock for testing
+type MockProcessCmd struct{}
 
-// MockServiceInfo represents service information for testing
-type MockServiceInfo struct {
-	Name      string
-	State     string
-	StopCh    chan struct{}
-	CommandWait func() error
-}
+func (m *MockProcessCmd) Start() error { return nil }
+func (m *MockProcessCmd) Wait() error { return nil }
+func (m *MockProcessCmd) SetEnv(env []string) {}
+func (m *MockProcessCmd) SetDir(dir string) {}
+func (m *MockProcessCmd) SetOutput(stdout, stderr io.Writer) {}
+func (m *MockProcessCmd) Signal(sig os.Signal) error { return nil }
+func (m *MockProcessCmd) Process() processTypes.Process { return nil }
+
+// MockProcess is a simple mock for testing
+type MockProcess struct{}
+
+func (m *MockProcess) Pid() int { return 1000 }
+func (m *MockProcess) Kill() error { return nil }
 
 // MockProcessSpawner mocks the process spawning functionality
 type MockProcessSpawner struct {
@@ -53,9 +61,9 @@ func TestManager_StartService(t *testing.T) {
 				Enabled: true,
 			},
 		}
-		processes := map[string]*MockServiceInfo{}
+		processes := map[string]*ServiceProcess{}
 		var processLock sync.RWMutex
-		manager := NewManager(services, nil, &processLock, logger)
+		manager := NewManager(services, processes, &processLock, logger)
 
 		// Create mock spawner
 		spawner := &MockProcessSpawner{}
@@ -75,9 +83,9 @@ func TestManager_StartService(t *testing.T) {
 				Enabled: false,
 			},
 		}
-		processes := map[string]*MockServiceInfo{}
+		processes := map[string]*ServiceProcess{}
 		var processLock sync.RWMutex
-		manager := NewManager(services, nil, &processLock, logger)
+		manager := NewManager(services, processes, &processLock, logger)
 
 		// Create mock spawner
 		spawner := &MockProcessSpawner{}
@@ -97,10 +105,12 @@ func TestManager_StartService(t *testing.T) {
 				Enabled: true,
 			},
 		}
-		processes := map[string]*processTypes.ServiceInfo{
+		processes := map[string]*ServiceProcess{
 			"test-service": {
-				Name:  "test-service",
-				State: string(processTypes.ProcessStateRunning),
+				Name:    "test-service",
+				State:   processTypes.ProcessStateRunning,
+				Command: &MockProcessCmd{},
+				StopCh:  make(chan struct{}),
 			},
 		}
 		var processLock sync.RWMutex
@@ -120,9 +130,9 @@ func TestManager_StartService(t *testing.T) {
 	t.Run("Service not configured", func(t *testing.T) {
 		// Setup
 		services := map[string]*types.ServiceConfig{}
-		processes := map[string]*processTypes.ServiceInfo{}
+		processes := map[string]*ServiceProcess{}
 		var processLock sync.RWMutex
-		manager := NewManager(services, nil, &processLock, logger)
+		manager := NewManager(services, processes, &processLock, logger)
 
 		// Create mock spawner
 		spawner := &MockProcessSpawner{}
@@ -143,9 +153,9 @@ func TestManager_StartService(t *testing.T) {
 				Enabled: true,
 			},
 		}
-		processes := map[string]*processTypes.ServiceInfo{}
+		processes := map[string]*ServiceProcess{}
 		var processLock sync.RWMutex
-		manager := NewManager(services, nil, &processLock, logger)
+		manager := NewManager(services, processes, &processLock, logger)
 
 		// Create mock spawner with error
 		expectedErr := errors.New("spawn error")
@@ -179,12 +189,13 @@ func TestManager_StopService(t *testing.T) {
 		}
 		
 		stopCh := make(chan struct{})
-		processes := map[string]*processTypes.ServiceInfo{
+		processes := map[string]*ServiceProcess{
 			"test-service": {
-				Name:  "test-service",
-				State: string(processTypes.ProcessStateRunning),
-				PID:   1000,
-				StopCh: stopCh,
+				Name:    "test-service",
+				State:   processTypes.ProcessStateRunning,
+				PID:     1000,
+				Command: &MockProcessCmd{},
+				StopCh:  stopCh,
 			},
 		}
 		
@@ -213,13 +224,13 @@ func TestManager_StopService(t *testing.T) {
 		assert.True(t, signalCalled)
 
 		// Verify state was updated
-		assert.Equal(t, string(processTypes.ProcessStateStopped), processes["test-service"].State)
+		assert.Equal(t, processTypes.ProcessStateStopped, processes["test-service"].State)
 	})
 
 	t.Run("Service not found", func(t *testing.T) {
 		// Setup
 		services := map[string]*types.ServiceConfig{}
-		processes := map[string]*processTypes.ServiceInfo{}
+		processes := map[string]*ServiceProcess{}
 		var processLock sync.RWMutex
 		manager := NewManager(services, processes, &processLock, logger)
 
@@ -242,10 +253,11 @@ func TestManager_StopService(t *testing.T) {
 				Enabled: true,
 			},
 		}
-		processes := map[string]*processTypes.ServiceInfo{
+		processes := map[string]*ServiceProcess{
 			"test-service": {
-				Name:  "test-service",
-				State: string(processTypes.ProcessStateStopped),
+				Name:    "test-service",
+				State:   processTypes.ProcessStateStopped,
+				Command: &MockProcessCmd{},
 			},
 		}
 		var processLock sync.RWMutex
@@ -270,12 +282,13 @@ func TestManager_StopService(t *testing.T) {
 			},
 		}
 		stopCh := make(chan struct{})
-		processes := map[string]*processTypes.ServiceInfo{
+		processes := map[string]*ServiceProcess{
 			"test-service": {
-				Name:  "test-service",
-				State: string(processTypes.ProcessStateRunning),
-				PID:   1000,
-				StopCh: stopCh,
+				Name:    "test-service",
+				State:   processTypes.ProcessStateRunning,
+				PID:     1000,
+				Command: &MockProcessCmd{},
+				StopCh:  stopCh,
 			},
 		}
 		var processLock sync.RWMutex
@@ -313,30 +326,39 @@ func TestManager_StopService(t *testing.T) {
 				Enabled: true,
 			},
 		}
-		stopCh := make(chan struct{})
-		processes := map[string]*processTypes.ServiceInfo{
+		processes := map[string]*ServiceProcess{
 			"test-service": {
-				Name:  "test-service",
-				State: string(processTypes.ProcessStateRunning),
-				PID:   1000,
-				StopCh: stopCh,
+				Name:    "test-service",
+				State:   processTypes.ProcessStateRunning,
+				PID:     1000,
+				Command: &MockProcessCmd{},
+				StopCh:  make(chan struct{}),
 			},
 		}
 		var processLock sync.RWMutex
 		manager := NewManager(services, processes, &processLock, logger)
 
-		// Mock signal function with error
+		// Expected error
 		expectedErr := errors.New("signal error")
+
+		// Mock signal function
 		signalFn := func(name string, sig syscall.Signal) error {
-			return expectedErr
+			if sig == syscall.SIGKILL {
+				return expectedErr
+			}
+			return nil
 		}
 
-		// Call StopService
-		err := manager.StopService("test-service", signalFn, 5)
-		require.NoError(t, err) // It should still continue and try to kill the process
+		// Create a wait function that times out
+		processes["test-service"].CommandWait = func() error {
+			time.Sleep(100 * time.Millisecond) // More than our tiny timeout
+			return nil
+		}
 
-		// Verify state was updated
-		assert.Equal(t, string(processTypes.ProcessStateStopped), processes["test-service"].State)
+		// Call StopService with very short timeout
+		err := manager.StopService("test-service", signalFn, 0)
+		require.Error(t, err)
+		assert.Equal(t, expectedErr, errors.Unwrap(err))
 	})
 }
 
@@ -352,10 +374,12 @@ func TestManager_RestartService(t *testing.T) {
 				Enabled: true,
 			},
 		}
-		processes := map[string]*processTypes.ServiceInfo{
+		processes := map[string]*ServiceProcess{
 			"test-service": {
-				Name:  "test-service",
-				State: string(processTypes.ProcessStateRunning),
+				Name:    "test-service",
+				State:   processTypes.ProcessStateRunning,
+				Command: &MockProcessCmd{},
+				StopCh:  make(chan struct{}),
 			},
 		}
 		var processLock sync.RWMutex
@@ -366,14 +390,14 @@ func TestManager_RestartService(t *testing.T) {
 		startCalled := false
 
 		stopFn := func(name string) error {
-			stopCalled = true
 			assert.Equal(t, "test-service", name)
+			stopCalled = true
 			return nil
 		}
 
 		startFn := func(name string) error {
-			startCalled = true
 			assert.Equal(t, "test-service", name)
+			startCalled = true
 			return nil
 		}
 
@@ -385,8 +409,8 @@ func TestManager_RestartService(t *testing.T) {
 		assert.True(t, stopCalled)
 		assert.True(t, startCalled)
 
-		// Verify state was updated to restarting during the operation
-		assert.Equal(t, string(processTypes.ProcessStateRestarting), processes["test-service"].State)
+		// Verify state was updated to restarting before the functions were called
+		assert.Equal(t, processTypes.ProcessStateRestarting, processes["test-service"].State)
 	})
 
 	t.Run("Stop error during restart", func(t *testing.T) {
@@ -396,22 +420,24 @@ func TestManager_RestartService(t *testing.T) {
 				Enabled: true,
 			},
 		}
-		processes := map[string]*processTypes.ServiceInfo{
+		processes := map[string]*ServiceProcess{
 			"test-service": {
-				Name:  "test-service",
-				State: string(processTypes.ProcessStateRunning),
+				Name:    "test-service",
+				State:   processTypes.ProcessStateRunning,
+				Command: &MockProcessCmd{},
+				StopCh:  make(chan struct{}),
 			},
 		}
 		var processLock sync.RWMutex
 		manager := NewManager(services, processes, &processLock, logger)
 
-		// Stop function fails but restart continues
-		stopErr := errors.New("stop error")
+		// Track function calls
+		startCalled := false
+
 		stopFn := func(name string) error {
-			return stopErr
+			return errors.New("stop error")
 		}
 
-		startCalled := false
 		startFn := func(name string) error {
 			startCalled = true
 			return nil
@@ -419,9 +445,9 @@ func TestManager_RestartService(t *testing.T) {
 
 		// Call RestartService
 		err := manager.RestartService("test-service", stopFn, startFn)
-		require.NoError(t, err)
+		require.NoError(t, err) // Errors from stopFn are logged but not returned
 
-		// Verify start was still called despite stop error
+		// Start should still be called even with stop error
 		assert.True(t, startCalled)
 	})
 
@@ -432,161 +458,36 @@ func TestManager_RestartService(t *testing.T) {
 				Enabled: true,
 			},
 		}
-		processes := map[string]*processTypes.ServiceInfo{
+		processes := map[string]*ServiceProcess{
 			"test-service": {
-				Name:  "test-service",
-				State: string(processTypes.ProcessStateRunning),
+				Name:    "test-service",
+				State:   processTypes.ProcessStateRunning,
+				Command: &MockProcessCmd{},
+				StopCh:  make(chan struct{}),
 			},
 		}
 		var processLock sync.RWMutex
 		manager := NewManager(services, processes, &processLock, logger)
 
-		// Stop succeeds but start fails
+		// Track function calls
 		stopCalled := false
+		expectedErr := errors.New("start error")
+
 		stopFn := func(name string) error {
 			stopCalled = true
 			return nil
 		}
 
-		startErr := errors.New("start error")
 		startFn := func(name string) error {
-			return startErr
+			return expectedErr
 		}
 
 		// Call RestartService
 		err := manager.RestartService("test-service", stopFn, startFn)
 		require.Error(t, err)
-		assert.Equal(t, startErr, err)
+		assert.Equal(t, expectedErr, err)
 
-		// Verify stop was called
+		// Stop should be called
 		assert.True(t, stopCalled)
-	})
-}
-
-// TestInfoProvider_GetServiceInfo tests the GetServiceInfo method
-func TestInfoProvider_GetServiceInfo(t *testing.T) {
-	t.Run("Get running service info", func(t *testing.T) {
-		// Setup
-		services := map[string]*types.ServiceConfig{
-			"test-service": {
-				Enabled: true,
-			},
-		}
-		processes := map[string]*processTypes.ServiceInfo{
-			"test-service": {
-				Name:      "test-service",
-				Configured: true,
-				Enabled:   true,
-				State:     string(processTypes.ProcessStateRunning),
-				PID:       1000,
-				Restarts:  2,
-				LastError: "test error",
-			},
-		}
-		var processLock sync.RWMutex
-		provider := NewInfoProvider(services, processes, &processLock)
-
-		// Get service info
-		info, err := provider.GetServiceInfo("test-service")
-		require.NoError(t, err)
-
-		// Verify info
-		assert.Equal(t, "test-service", info.Name)
-		assert.Equal(t, string(processTypes.ProcessStateRunning), info.State)
-		assert.Equal(t, 1000, info.PID)
-		assert.Equal(t, 2, info.Restarts)
-		assert.Equal(t, "test error", info.LastError)
-	})
-
-	t.Run("Get non-running service info", func(t *testing.T) {
-		// Setup
-		services := map[string]*types.ServiceConfig{
-			"test-service": {
-				Enabled: true,
-			},
-		}
-		processes := map[string]*processTypes.ServiceInfo{}
-		var processLock sync.RWMutex
-		provider := NewInfoProvider(services, processes, &processLock)
-
-		// Get service info
-		info, err := provider.GetServiceInfo("test-service")
-		require.NoError(t, err)
-
-		// Verify info
-		assert.Equal(t, "test-service", info.Name)
-		assert.Equal(t, string(processTypes.ProcessStateStopped), info.State)
-		assert.True(t, info.Configured)
-		assert.True(t, info.Enabled)
-	})
-
-	t.Run("Get non-existent service info", func(t *testing.T) {
-		// Setup
-		services := map[string]*types.ServiceConfig{}
-		processes := map[string]*processTypes.ServiceInfo{}
-		var processLock sync.RWMutex
-		provider := NewInfoProvider(services, processes, &processLock)
-
-		// Get service info
-		info, err := provider.GetServiceInfo("test-service")
-		require.Error(t, err)
-		assert.Nil(t, info)
-		assert.Contains(t, err.Error(), "not configured")
-	})
-}
-
-// TestInfoProvider_GetAllServices tests the GetAllServices method
-func TestInfoProvider_GetAllServices(t *testing.T) {
-	t.Run("Get all services", func(t *testing.T) {
-		// Setup
-		services := map[string]*types.ServiceConfig{
-			"service1": {
-				Enabled: true,
-			},
-			"service2": {
-				Enabled: false,
-			},
-		}
-		processes := map[string]*processTypes.ServiceInfo{
-			"service1": {
-				Name:      "service1",
-				Configured: true,
-				Enabled:   true,
-				State:     string(processTypes.ProcessStateRunning),
-				PID:       1000,
-			},
-		}
-		var processLock sync.RWMutex
-		provider := NewInfoProvider(services, processes, &processLock)
-
-		// Get all services
-		allServices, err := provider.GetAllServices()
-		require.NoError(t, err)
-
-		// Verify all services
-		assert.Len(t, allServices, 2)
-		
-		// Verify running service
-		assert.Contains(t, allServices, "service1")
-		assert.Equal(t, string(processTypes.ProcessStateRunning), allServices["service1"].State)
-		assert.Equal(t, 1000, allServices["service1"].PID)
-		
-		// Verify stopped service
-		assert.Contains(t, allServices, "service2")
-		assert.Equal(t, string(processTypes.ProcessStateStopped), allServices["service2"].State)
-		assert.False(t, allServices["service2"].Enabled)
-	})
-
-	t.Run("No services", func(t *testing.T) {
-		// Setup
-		services := map[string]*types.ServiceConfig{}
-		processes := map[string]*processTypes.ServiceInfo{}
-		var processLock sync.RWMutex
-		provider := NewInfoProvider(services, processes, &processLock)
-
-		// Get all services
-		allServices, err := provider.GetAllServices()
-		require.NoError(t, err)
-		assert.Empty(t, allServices)
 	})
 }

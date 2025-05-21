@@ -12,7 +12,7 @@ import (
 
 	"github.com/handcraftdev/blackhole/internal/core/config"
 	"github.com/handcraftdev/blackhole/internal/core/config/types"
-	"github.com/handcraftdev/blackhole/internal/core/process/testing"
+	testingMocks "github.com/handcraftdev/blackhole/internal/core/process/testing"
 	processTypes "github.com/handcraftdev/blackhole/internal/core/process/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -87,7 +87,7 @@ func newTestConfigManager(t *testing.T, config *types.Config) *config.ConfigMana
 }
 
 // setupTestOrchestrator creates an orchestrator with mock executor for testing
-func setupTestOrchestrator(t *testing.T) (*Orchestrator, *testing.MockProcessExecutor, *config.ConfigManager, string) {
+func setupTestOrchestrator(t *testing.T) (*Orchestrator, *testingMocks.MockProcessExecutor, *config.ConfigManager, string) {
 	// Create temp directory for test
 	tempDir := createTempDir(t)
 	
