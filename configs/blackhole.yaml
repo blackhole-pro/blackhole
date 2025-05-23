@@ -6,35 +6,34 @@ orchestrator:
   log_level: info
   
 services:
-  # Only services that have actual binaries should be enabled
-  # This test-service is the only one with an actual binary in bin/services
-  test-service:
+  # Enable available services with actual binaries
+  identity:
     enabled: true
+    resources:
+      cpu: 200        # 200% = 2 CPU cores
+      memory: 1024    # MB
+      io_weight: 500  # Medium I/O priority
+    config:
+      log_level: info
+      port: 9001
+      
+  node:
+    enabled: true
+    resources:
+      cpu: 300        # 300% = 3 CPU cores (P2P networking intensive)
+      memory: 2048    # MB
+      io_weight: 700  # High I/O priority for P2P
+    config:
+      log_level: info
+      port: 9002
+      p2p_port: 4001
+      
+  # Test service for integration testing
+  test-service:
+    enabled: false
     resources:
       cpu: 100        # 100% = 1 CPU core
       memory: 512     # MB
       io_weight: 500  # Medium I/O priority
     config:
       log_level: info
-      
-  # These services are disabled until their binaries are built
-  identity:
-    enabled: false
-    resources:
-      cpu: 200        # 200% = 2 CPU cores
-      memory: 1024    # MB
-      io_weight: 500  # Medium I/O priority
-    config:
-      database: postgres://identity:pass@localhost/identity
-      cache_size: 100MB
-      
-  storage:
-    enabled: false
-    resources:
-      cpu: 100        # 100% = 1 CPU core
-      memory: 2048    # MB
-      io_weight: 900  # High I/O priority
-    config:
-      ipfs_api: http://localhost:5001
-      filecoin_api: http://localhost:1234
-      chunk_size: 1MB
