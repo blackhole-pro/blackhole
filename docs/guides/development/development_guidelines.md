@@ -1,6 +1,6 @@
 # Blackhole Project: Development Guidelines
 
-*Last Updated: May 21, 2025*
+*Last Updated: May 23, 2025*
 
 This document outlines the development guidelines and best practices for the Blackhole project. These guidelines are designed to ensure maintainability, testability, scalability, and consistent collaboration as the project grows.
 
@@ -60,10 +60,23 @@ blackhole/
 │   │       └── helpers.go # Helper functions
 │   │
 │   └── services/          # Service implementations
+│       ├── identity/      # Identity service
+│       ├── node/          # Node service
+│       └── [service]/     # Other services
 │
 ├── pkg/                   # Public packages
 │   ├── api/               # Public API clients
 │   └── sdk/               # SDK for developers
+│
+├── bin/                   # Build artifacts (generated)
+│   ├── blackhole          # Main binary
+│   └── services/          # Service binaries
+│       ├── identity/      # Identity service directory
+│       │   └── identity   # Identity service executable
+│       ├── node/          # Node service directory
+│       │   └── node       # Node service executable
+│       └── [service]/     # Other service directories
+│           └── [service]  # Service executable
 │
 └── test/                  # All tests
     ├── unit/              # Unit tests
@@ -77,6 +90,65 @@ blackhole/
         └── [fixture].go
 ```
 
+## Build System Structure
+
+The Blackhole project uses a structured approach to building and organizing executables, ensuring clear separation between the main application and services.
+
+### Build Directory Structure
+
+```
+bin/                       # All build artifacts
+├── blackhole              # Main application binary
+└── services/              # Service binaries (organized by service)
+    ├── identity/          # Identity service directory
+    │   └── identity       # Identity service executable
+    ├── node/              # Node service directory
+    │   └── node           # Node service executable
+    └── [service]/         # Other service directories
+        └── [service]      # Service executable
+```
+
+### Build Guidelines
+
+1. **Service Isolation**: Each service executable is placed in its own directory under `bin/services/`
+2. **Consistent Naming**: Service directory name matches the service name and executable name
+3. **Clean Structure**: Service executables are self-contained within their directories
+4. **Main Binary**: The main orchestrator binary remains in the root `bin/` directory
+
+### Makefile Configuration
+
+The project Makefile is configured to automatically create the proper directory structure:
+
+```makefile
+# Build individual services
+.PHONY: $(SERVICES)
+$(SERVICES):
+	@echo "Building $@ service..."
+	@mkdir -p $(BINARY_DIR)/services/$@
+	$(GO) build $(GOFLAGS) -o $(BINARY_DIR)/services/$@/$@ ./internal/services/$@
+```
+
+This ensures that:
+- Each service gets its own directory: `bin/services/servicename/`
+- The executable is named consistently: `bin/services/servicename/servicename`
+- Directory structure is created automatically during build
+
+### Build Commands
+
+- `make build` - Build the main application binary
+- `make build-services` - Build all service binaries in their organized structure
+- `make identity` - Build specific identity service binary
+- `make node` - Build specific node service binary
+- `make clean` - Remove all build artifacts
+
+### Service Directory Benefits
+
+1. **Deployment Flexibility**: Each service can be deployed independently with its directory
+2. **Configuration Isolation**: Services can have dedicated configuration files in their directories
+3. **Asset Management**: Service-specific assets (configs, docs) can be co-located with executables
+4. **Clear Organization**: Prevents binary confusion in multi-service environments
+5. **Docker Compatibility**: Service directories can be easily packaged into individual containers
+
 ## Package Organization
 
 ### Rules
@@ -86,6 +158,8 @@ blackhole/
 3. **Package Documentation**: Each package must have a package comment in at least one file
 4. **Dependency Direction**: Higher-level packages can import lower-level ones, not vice versa
 5. **Minimal Public API**: Export only what's necessary from each package
+6. **Unified Workspace**: All services MUST use the main workspace - no separate go.mod files in services
+7. **Dependency Management**: All dependencies managed through the root go.mod file
 
 ### Guidelines
 
@@ -610,6 +684,33 @@ Before submitting code for review, ensure:
 9. **Performance**: Are there any performance concerns with the implementation?
 10. **Security**: Are there any security implications that need to be addressed?
 
+## Dashboard and Web Development Guidelines
+
+### Rules
+
+1. **Unified Service Monitoring**: Dashboard must show all services in a single table with consistent columns
+2. **Mesh Status Tracking**: Include mesh registration status for all services to monitor connectivity
+3. **Real-time Updates**: Services should update in real-time, core components may have delayed updates
+4. **Responsive Design**: Dashboard must work on various screen sizes and devices
+5. **Clean HTML Structure**: Use semantic HTML with proper accessibility considerations
+
+### Dashboard Requirements
+
+- **Service Table Columns**: Service, Status, Mesh, Port, PID, Uptime, CPU, Memory, Actions
+- **Status Indicators**: Use color-coded badges for service status (running, stopped, error)
+- **Mesh Connectivity**: Track and display service registration with mesh router
+- **Action Buttons**: Provide start, stop, restart actions for each service
+- **Core Components**: Include daemon, orchestrator, and mesh router in the services table
+- **Storage Removal**: Storage service has been removed - do not include in dashboards
+
+### Implementation Standards
+
+- Use vanilla JavaScript for functionality - avoid unnecessary framework dependencies
+- Implement WebSocket connections for real-time updates where appropriate
+- Follow consistent naming conventions for DOM elements and CSS classes
+- Ensure proper error handling for failed service operations
+- Maintain clean separation between HTML structure, CSS styling, and JavaScript functionality
+
 ---
 
 # Git Workflow
@@ -689,6 +790,18 @@ We use conventional commits to maintain a clean and informative git history.
 
 <footer>
 ```
+
+### AI-Generated Code and Signature Policy
+
+**CRITICAL RULE: No AI signatures or co-authoring credits in commits**
+
+- **NEVER** include AI assistant signatures like "Generated with Claude Code" or "Co-Authored-By: Claude"
+- **NEVER** add any references to AI assistance in commit messages, PR descriptions, or code comments
+- All commits must appear as if written entirely by human developers
+- Code quality and standards must be maintained regardless of generation method
+- This policy applies to all AI tools including Claude, GitHub Copilot, ChatGPT, etc.
+
+**Rationale**: Maintains professional development practices and clean git history without implementation details.
 
 ### Types
 
