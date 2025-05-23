@@ -27,14 +27,15 @@
         </header>
 
         <main class="main">
-            <!-- Core Components Table -->
+            <!-- Services Table -->
             <section class="section">
-                <h2>Core Components</h2>
+                <h2>Services <span class="update-badge unified-timing">3s updates</span></h2>
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Component</th>
+                            <th>Service</th>
                             <th>Status</th>
+                            <th>Mesh</th>
                             <th>Port</th>
                             <th>PID</th>
                             <th>Uptime</th>
@@ -44,9 +45,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><strong>Daemon</strong> <span class="update-badge daemon-timing">5s delay</span></td>
+                        <!-- Core Components moved to Services table -->
+                        <tr data-service="daemon">
+                            <td><strong>Daemon</strong></td>
                             <td><span class="status-badge" id="daemon-status">Unknown</span></td>
+                            <td><span class="mesh-badge" id="daemon-mesh">N/A</span></td>
                             <td id="daemon-port">-</td>
                             <td id="daemon-pid">-</td>
                             <td id="daemon-uptime">-</td>
@@ -56,9 +59,10 @@
                                 <button class="action-btn" onclick="restartDaemon()">↻</button>
                             </td>
                         </tr>
-                        <tr>
+                        <tr data-service="orchestrator">
                             <td><strong>Orchestrator</strong></td>
                             <td><span class="status-badge" id="orchestrator-status">Unknown</span></td>
+                            <td><span class="mesh-badge" id="orchestrator-mesh">N/A</span></td>
                             <td class="shared-info">Shared</td>
                             <td class="shared-info">Shared</td>
                             <td class="shared-info">Shared</td>
@@ -66,9 +70,10 @@
                             <td class="shared-info">Shared</td>
                             <td>-</td>
                         </tr>
-                        <tr>
+                        <tr data-service="mesh">
                             <td><strong>Service Mesh</strong></td>
                             <td><span class="status-badge" id="mesh-status">Unknown</span></td>
+                            <td><span class="mesh-badge" id="mesh-mesh">Active</span></td>
                             <td class="shared-info">Shared</td>
                             <td class="shared-info">Shared</td>
                             <td class="shared-info">Shared</td>
@@ -76,30 +81,12 @@
                             <td class="shared-info">Shared</td>
                             <td>-</td>
                         </tr>
-                    </tbody>
-                </table>
-            </section>
-
-            <!-- Services Table -->
-            <section class="section">
-                <h2>Services <span class="update-badge service-timing">Real-time updates</span></h2>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Service</th>
-                            <th>Status</th>
-                            <th>Port</th>
-                            <th>PID</th>
-                            <th>Uptime</th>
-                            <th>CPU</th>
-                            <th>Memory</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                        
+                        <!-- Regular Services -->
                         <tr data-service="identity">
                             <td><strong>Identity</strong></td>
                             <td><span class="status-badge" id="identity-status">Unknown</span></td>
+                            <td><span class="mesh-badge" id="identity-mesh">-</span></td>
                             <td id="identity-port">-</td>
                             <td id="identity-pid">-</td>
                             <td id="identity-uptime">-</td>
@@ -111,23 +98,10 @@
                                 <button class="action-btn restart-btn" data-service="identity" data-action="restart">↻</button>
                             </td>
                         </tr>
-                        <tr data-service="storage">
-                            <td><strong>Storage</strong></td>
-                            <td><span class="status-badge" id="storage-status">Unknown</span></td>
-                            <td id="storage-port">-</td>
-                            <td id="storage-pid">-</td>
-                            <td id="storage-uptime">-</td>
-                            <td id="storage-cpu">-</td>
-                            <td id="storage-memory">-</td>
-                            <td class="actions">
-                                <button class="action-btn start-btn" data-service="storage" data-action="start">▶</button>
-                                <button class="action-btn stop-btn" data-service="storage" data-action="stop">⏹</button>
-                                <button class="action-btn restart-btn" data-service="storage" data-action="restart">↻</button>
-                            </td>
-                        </tr>
                         <tr data-service="node">
                             <td><strong>Node</strong></td>
                             <td><span class="status-badge" id="node-status">Unknown</span></td>
+                            <td><span class="mesh-badge" id="node-mesh">-</span></td>
                             <td id="node-port">-</td>
                             <td id="node-pid">-</td>
                             <td id="node-uptime">-</td>
@@ -142,6 +116,7 @@
                         <tr data-service="ledger">
                             <td><strong>Ledger</strong></td>
                             <td><span class="status-badge" id="ledger-status">Unknown</span></td>
+                            <td><span class="mesh-badge" id="ledger-mesh">-</span></td>
                             <td id="ledger-port">-</td>
                             <td id="ledger-pid">-</td>
                             <td id="ledger-uptime">-</td>
@@ -156,6 +131,7 @@
                         <tr data-service="social">
                             <td><strong>Social</strong></td>
                             <td><span class="status-badge" id="social-status">Unknown</span></td>
+                            <td><span class="mesh-badge" id="social-mesh">-</span></td>
                             <td id="social-port">-</td>
                             <td id="social-pid">-</td>
                             <td id="social-uptime">-</td>
@@ -170,6 +146,7 @@
                         <tr data-service="indexer">
                             <td><strong>Indexer</strong></td>
                             <td><span class="status-badge" id="indexer-status">Unknown</span></td>
+                            <td><span class="mesh-badge" id="indexer-mesh">-</span></td>
                             <td id="indexer-port">-</td>
                             <td id="indexer-pid">-</td>
                             <td id="indexer-uptime">-</td>
@@ -184,6 +161,7 @@
                         <tr data-service="analytics">
                             <td><strong>Analytics</strong></td>
                             <td><span class="status-badge" id="analytics-status">Unknown</span></td>
+                            <td><span class="mesh-badge" id="analytics-mesh">-</span></td>
                             <td id="analytics-port">-</td>
                             <td id="analytics-pid">-</td>
                             <td id="analytics-uptime">-</td>
@@ -198,6 +176,7 @@
                         <tr data-service="wallet">
                             <td><strong>Wallet</strong></td>
                             <td><span class="status-badge" id="wallet-status">Unknown</span></td>
+                            <td><span class="mesh-badge" id="wallet-mesh">-</span></td>
                             <td id="wallet-port">-</td>
                             <td id="wallet-pid">-</td>
                             <td id="wallet-uptime">-</td>
