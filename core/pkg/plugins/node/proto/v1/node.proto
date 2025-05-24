@@ -6,6 +6,7 @@ option go_package = "github.com/handcraftdev/blackhole/core/pkg/plugins/node/pro
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/struct.proto";
+import "google/protobuf/duration.proto";
 
 // NodePlugin defines the complete interface for the node plugin
 service NodePlugin {

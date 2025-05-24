@@ -16,6 +16,7 @@ import (
 	"context"
 
 	"github.com/blackhole-pro/blackhole/core/internal/framework/plugins"
+	"github.com/blackhole-pro/blackhole/core/internal/framework/plugins/validator"
 )
 
 // Common errors
@@ -61,10 +62,16 @@ type CacheEntry struct {
 
 // New creates a new plugin loader
 func New() plugins.PluginLoader {
+	return NewWithOptions(false)
+}
+
+// NewWithOptions creates a new plugin loader with options
+func NewWithOptions(strictCompliance bool) plugins.PluginLoader {
 	loader := &pluginLoader{
 		validators: []PluginValidator{
 			&hashValidator{},
 			&dependencyValidator{},
+			newComplianceValidator(strictCompliance),
 		},
 		loaders: make(map[plugins.SourceType]SourceLoader),
 		cache:   &PluginCache{cache: make(map[string]CacheEntry)},

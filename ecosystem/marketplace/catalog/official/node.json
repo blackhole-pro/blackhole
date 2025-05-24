@@ -1,0 +1,51 @@
+{
+  "id": "node",
+  "name": "Node Plugin",
+  "description": "P2P networking and distributed node management for Blackhole",
+  "version": "1.0.0",
+  "author": "Blackhole Foundation",
+  "license": "MIT",
+  "homepage": "https://github.com/blackhole-pro/blackhole/tree/main/core/pkg/plugins/node",
+  "repository": "https://github.com/blackhole-pro/blackhole",
+  "documentation": "https://github.com/blackhole-pro/blackhole/tree/main/core/pkg/plugins/node/README.md",
+  "categories": ["networking", "p2p", "infrastructure"],
+  "keywords": ["libp2p", "networking", "distributed", "mesh"],
+  "compatibility": {
+    "min_version": "1.0.0",
+    "max_version": "*"
+  },
+  "dependencies": [],
+  "resources": {
+    "cpu": "500m",
+    "memory": "512Mi",
+    "storage": "100Mi",
+    "network": "unlimited"
+  },
+  "capabilities": [
+    "network.p2p",
+    "network.discovery",
+    "mesh.routing",
+    "events.publish"
+  ],
+  "downloads": {
+    "linux-amd64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-linux-amd64.plugin",
+    "linux-arm64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-linux-arm64.plugin",
+    "darwin-amd64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-darwin-amd64.plugin",
+    "darwin-arm64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-darwin-arm64.plugin"
+  },
+  "checksums": {
+    "linux-amd64": "sha256:PLACEHOLDER",
+    "linux-arm64": "sha256:PLACEHOLDER",
+    "darwin-amd64": "sha256:PLACEHOLDER",
+    "darwin-arm64": "sha256:PLACEHOLDER"
+  },
+  "screenshots": [],
+  "changelog": "https://github.com/blackhole-pro/blackhole/blob/main/core/pkg/plugins/node/CHANGELOG.md",
+  "support": "https://github.com/blackhole-pro/blackhole/issues",
+  "pricing": "free",
+  "featured": true,
+  "verified": true,
+  "downloads_count": 0,
+  "rating": 0,
+  "reviews_count": 0
+}

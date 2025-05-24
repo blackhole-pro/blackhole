@@ -51,6 +51,11 @@ test:
 	@echo "==> Running tests..."
 	@go test -v -race -cover ./...
 
+.PHONY: check-compliance
+check-compliance:
+	@echo "==> Checking plugin compliance..."
+	@../../../scripts/check-plugin-compliance.sh . || exit 1
+
 .PHONY: lint
 lint:
 	@echo "==> Running linter..."
@@ -62,7 +67,7 @@ clean:
 	@rm -rf $(BIN_DIR) $(DIST_DIR)
 
 .PHONY: package
-package: build docs
+package: check-compliance build docs
 	@echo "==> Creating plugin package..."
 	@mkdir -p $(DIST_DIR)
 	
@@ -150,7 +155,7 @@ update-deps:
 	@go mod tidy
 
 .PHONY: release
-release: clean test lint package verify
+release: clean test lint check-compliance package verify
 	@echo "==> Release build complete!"
 	@echo "==> Plugin package: $(DIST_DIR)/$(PLUGIN_NAME)-$(VERSION).plugin"
 

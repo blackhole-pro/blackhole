@@ -959,6 +959,99 @@ When adding complex nested documentation:
 
 This systematic approach ensures documentation remains organized, discoverable, and maintainable as the project grows, with clear hierarchical relationships for complex topics.
 
+## Plugin Development Guidelines
+
+### Rules
+
+1. **Mesh Communication Only**: Plugins MUST communicate through the mesh network, never directly
+2. **gRPC Service Definition**: Every plugin MUST define its gRPC service interface in proto files
+3. **Event-Driven Architecture**: Plugins MUST publish events for significant state changes
+4. **Location Transparency**: Plugins MUST be designed to work regardless of execution location
+5. **No Direct Dependencies**: Plugins MUST NOT import or depend on other plugin code directly
+6. **Self-Contained**: Each plugin MUST have its own go.mod and be independently buildable
+7. **Structured Logging**: Plugins MUST use structured logging (e.g., zap), not standard log
+8. **Typed Errors**: Plugins MUST define custom error types, not use generic errors
+9. **Resource Limits**: Plugins MUST declare CPU, memory, and bandwidth requirements
+10. **Health Checks**: Plugins MUST implement health check endpoints
+
+### Plugin Communication Patterns
+
+1. **Direct Plugin-to-Plugin** (Through Mesh):
+   ```go
+   // Good: Through mesh
+   nodeClient := mesh.ConnectToPlugin("node", "network-status")
+   status, err := nodeClient.GetNetworkStatus(ctx, &GetNetworkStatusRequest{})
+   
+   // Bad: Direct import
+   import "core/pkg/plugins/node" // NEVER DO THIS
+   ```
+
+2. **Event Publishing**:
+   ```go
+   // Publish when important things happen
+   mesh.PublishEvent(mesh.Event{
+       Type:   "node.peer.connected",
+       Source: pluginID,
+       Data:   map[string]interface{}{"peer_id": peerID},
+   })
+   ```
+
+3. **Event Subscription**:
+   ```go
+   // Subscribe to relevant events
+   events := mesh.Subscribe("storage.content.*")
+   for event := range events {
+       // React to storage events
+   }
+   ```
+
+### Plugin Structure Requirements
+
+1. **Directory Structure**:
+   ```
+   core/pkg/plugins/myplugin/
+   ├── main.go                 # Entry point (direct RPC version)
+   ├── main_mesh.go           # Entry point (mesh version)
+   ├── grpc_server.go         # gRPC service implementation
+   ├── go.mod                 # Plugin module definition
+   ├── plugin.yaml            # Plugin manifest
+   ├── Makefile               # Build automation
+   ├── README.md              # Documentation
+   ├── proto/
+   │   └── v1/
+   │       └── plugin.proto   # gRPC service definition
+   ├── types/                 # Type definitions
+   │   ├── types.go           # Core types
+   │   └── errors.go          # Typed errors
+   ├── [feature]/             # Feature packages
+   └── mesh/                  # Mesh client
+       └── client.go          # Mesh communication
+   ```
+
+2. **Plugin Manifest** (plugin.yaml):
+   - Must declare all capabilities needed
+   - Must specify resource requirements
+   - Must list mesh communication patterns
+   - Must define configuration schema
+
+### Plugin Best Practices
+
+1. **Loose Coupling**: Design plugins to work independently
+2. **Graceful Degradation**: Handle unavailable dependencies gracefully
+3. **Async Communication**: Prefer events over synchronous calls
+4. **Single Responsibility**: Each plugin should do one thing well
+5. **State Management**: Support state export/import for hot-swapping
+6. **Performance Monitoring**: Track and report performance metrics
+7. **Security**: Never expose internal state directly
+
+### Plugin Testing Requirements
+
+1. **Unit Tests**: Minimum 80% coverage for business logic
+2. **Integration Tests**: Test mesh communication patterns
+3. **Mock Mesh Client**: Use mock client for testing
+4. **Event Testing**: Verify correct event publishing/handling
+5. **Error Scenarios**: Test all failure modes
+
 ## Code Review Checklist
 
 Before submitting code for review, ensure:
@@ -975,6 +1068,9 @@ Before submitting code for review, ensure:
 10. **Security**: Are there any security implications that need to be addressed?
 11. **Documentation**: Is the documentation updated following the numbered hierarchy standards?
 12. **README Updates**: Are all relevant README files updated to reflect changes?
+13. **Plugin Compliance**: For plugins, does it follow all plugin development guidelines?
+14. **Mesh Communication**: For plugins, is all communication through the mesh?
+15. **Event Architecture**: For plugins, are events properly published and subscribed?
 
 ## Dashboard and Web Development Guidelines
 

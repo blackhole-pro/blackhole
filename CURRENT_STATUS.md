@@ -13,11 +13,11 @@ Through extensive architectural analysis and documentation, we have established 
 **Framework vs Platform vs Application Clarity:**
 ```
 📱 Application Layer:  P2P Content Sharing, Enterprise Storage, AI Processing
-                      ↓ (built on)
+                     ↓ (built on)
 🛠️ Platform Layer:     Plugin Marketplace, Node Management, Deployment Tools  
-                      ↓ (built on)
+                     ↓ (built on)
 🔌 Framework Layer:    Blackhole Foundation (Core Infrastructure - THIS PROJECT)
-                      ↓ (runs on)
+                     ↓ (runs on)
 🖥️ Infrastructure:     OS, Network, Hardware
 ```
 
@@ -394,10 +394,10 @@ Each application implements its own "services" that orchestrate plugins accordin
 Old: Plugin Manager <--[stdin/stdout]--> Plugin Process
 
 New: Plugin Manager <--[Mesh/gRPC]--> Plugin Service
-                                           |
-                                      Unix Socket
-                                           |
-                                   Other Services/Apps
+                                          |
+                                     Unix Socket
+                                          |
+                                  Other Services/Apps
 ```
 
 This change aligns with Blackhole's vision where everything communicates via the mesh network, providing location transparency and enabling true distributed plugin execution.
@@ -434,6 +434,48 @@ pluginClient.Run(context.Background())
 - **Updated Node Plugin** - Refactored to use the client library
 
 This completes the plugin development experience, making it easy for developers to create plugins that integrate seamlessly with the Blackhole mesh network.
+
+### Node Plugin Mesh Compliance (5/25/2025)
+
+**Major Achievement**: Successfully refactored the node plugin to comply with mesh communication architecture and development guidelines.
+
+#### 1. **Development Guidelines Compliance** ✅
+Fixed all violations of `ecosystem/docs/06_guides/06_01-development_guidelines.md`:
+- **Subdirectory Organization**: Created proper package structure (types/, p2p/, discovery/, health/, network/, handlers/, plugin/, mesh/)
+- **Structured Logging**: Replaced standard `log` with `zap` structured logging
+- **Typed Errors**: Implemented custom error types in `types/errors.go`
+- **Test Coverage**: Added comprehensive unit tests (75-93% coverage)
+- **Function Size**: Broke down large functions to under 50 lines
+- **Self-Contained**: Made plugin self-contained with its own go.mod
+
+#### 2. **Mesh Communication Architecture** ✅
+Aligned with `core/pkg/plugins/README.md` mesh requirements:
+- **gRPC Service**: Implemented NodePlugin service from proto definition
+- **Event Publishing**: Publishes events for peer connections/disconnections
+- **Event Subscription**: Subscribes to storage and identity events
+- **Location Transparency**: Communicates through mesh network
+- **No Direct RPC**: Removed all direct RPC calls
+
+#### 3. **Implementation Components** ✅
+- **mesh/client.go**: Mesh client interface for plugins
+- **grpc_server.go**: Full NodePlugin gRPC service implementation
+- **main_mesh.go**: Mesh-compliant entry point
+- **grpc_integration_test.go**: Integration tests for gRPC server
+- **mesh/client_test.go**: Unit tests for mesh client
+
+#### 4. **Documentation** ✅
+- **MESH_COMPLIANCE.md**: Comprehensive guide for mesh architecture
+- **Updated README.md**: Documents both direct RPC and mesh versions
+- **REFACTORING_PLAN.md**: Tracks all compliance issues and fixes
+
+#### Benefits of Mesh Compliance:
+1. **Decoupling**: Services no longer need direct connections
+2. **Scalability**: Can distribute plugins across multiple nodes
+3. **Resilience**: Mesh handles connection failures and retries
+4. **Observability**: All events flow through mesh for monitoring
+5. **Type Safety**: gRPC interfaces with proper protobuf definitions
+
+The node plugin now serves as a reference implementation for building mesh-compliant plugins that follow all development guidelines.
 
 ## Community and Ecosystem Readiness
 
@@ -1063,10 +1105,10 @@ No more manual JSON editing required:
 ---
 
 **Next Steps**: Continue framework implementation:
-1. **Build and publish first plugin** as example
-   - Package the node plugin properly
-   - Create GitHub release
-   - Verify marketplace automation
+1. **Publish node plugin to marketplace** to verify automation
+   - Build mesh-compliant package
+   - Create GitHub release with proper tag
+   - Verify marketplace update workflow
 2. **Extend Mesh Networking Domain** for multi-topology support
    - Complete service discovery implementation
    - Add P2P, cloud, and edge topology support

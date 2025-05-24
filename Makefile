@@ -130,7 +130,7 @@ plugin-build-all:
 	done
 
 .PHONY: plugin-package
-plugin-package:
+plugin-package: plugin-check-compliance
 	@echo "Packaging plugins..."
 	@for plugin in $(PLUGINS); do \
 		echo "Packaging $$plugin plugin..."; \
@@ -143,6 +143,14 @@ plugin-clean:
 	@for plugin in $(PLUGINS); do \
 		echo "Cleaning $$plugin plugin..."; \
 		$(MAKE) -C core/pkg/plugins/$$plugin clean || exit 1; \
+	done
+
+.PHONY: plugin-check-compliance
+plugin-check-compliance:
+	@echo "Checking plugin compliance..."
+	@for plugin in $(PLUGINS); do \
+		echo "Checking compliance for $$plugin plugin..."; \
+		$(MAKE) -C core/pkg/plugins/$$plugin check-compliance || exit 1; \
 	done
 
 .PHONY: plugin-test
@@ -195,8 +203,9 @@ help:
 	@echo "Plugin targets:"
 	@echo "  plugin-build   - Build all plugins for local platform"
 	@echo "  plugin-build-all - Build all plugins for all platforms"
-	@echo "  plugin-package - Package all plugins"
+	@echo "  plugin-package - Package all plugins (with compliance check)"
 	@echo "  plugin-clean   - Clean plugin build artifacts"
+	@echo "  plugin-check-compliance - Check all plugins for guideline compliance"
 	@echo "  plugin-test    - Test all plugins"
 	@echo "  plugin-release - Build plugin releases"
 	@echo "  plugin-<name>  - Build specific plugin (e.g., plugin-node)"
