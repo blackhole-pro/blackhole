@@ -5,16 +5,16 @@
   "description": "P2P networking and distributed communication plugin for Blackhole",
   "category": "networking",
   "author": {
-    "name": "Blackhole Foundation",
-    "url": "https://github.com/blackhole-foundation"
+    "name": "Blackhole Protocol",
+    "url": "https://github.com/blackhole-pro"
   },
   "license": "MIT",
   "source": {
     "type": "monorepo",
     "path": "core/pkg/plugins/node"
   },
-  "repository": "https://github.com/blackhole-foundation/blackhole",
-  "documentation": "https://github.com/blackhole-foundation/blackhole/tree/main/core/pkg/plugins/node/docs",
+  "repository": "https://github.com/blackhole-pro/blackhole",
+  "documentation": "https://github.com/blackhole-pro/blackhole/tree/main/core/pkg/plugins/node/docs",
   "keywords": ["p2p", "networking", "libp2p", "distributed", "mesh"],
   "requirements": {
     "blackhole": ">=1.0.0",

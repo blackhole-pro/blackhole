@@ -18,7 +18,7 @@ cat > "$OUTPUT_FILE" << 'EOF'
 {
   "version": "1.0",
   "updated": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
-  "baseUrl": "https://github.com/blackhole-foundation/blackhole/releases/download",
+  "baseUrl": "https://github.com/blackhole-pro/blackhole/releases/download",
   "plugins": [
 EOF
 
@@ -58,20 +58,20 @@ for metadata_file in "$CATALOG_DIR"/official/*.json; do
       "source": $(echo "$metadata" | jq '.source // {}'),
       "downloads": {
         "darwin-amd64": {
-          "url": "https://github.com/blackhole-foundation/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-darwin-amd64-v$version.plugin",
-          "checksumUrl": "https://github.com/blackhole-foundation/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-darwin-amd64-v$version.plugin.sha256"
+          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-darwin-amd64-v$version.plugin",
+          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-darwin-amd64-v$version.plugin.sha256"
         },
         "darwin-arm64": {
-          "url": "https://github.com/blackhole-foundation/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-darwin-arm64-v$version.plugin",
-          "checksumUrl": "https://github.com/blackhole-foundation/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-darwin-arm64-v$version.plugin.sha256"
+          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-darwin-arm64-v$version.plugin",
+          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-darwin-arm64-v$version.plugin.sha256"
         },
         "linux-amd64": {
-          "url": "https://github.com/blackhole-foundation/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-linux-amd64-v$version.plugin",
-          "checksumUrl": "https://github.com/blackhole-foundation/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-linux-amd64-v$version.plugin.sha256"
+          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-linux-amd64-v$version.plugin",
+          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-linux-amd64-v$version.plugin.sha256"
         },
         "linux-arm64": {
-          "url": "https://github.com/blackhole-foundation/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-linux-arm64-v$version.plugin",
-          "checksumUrl": "https://github.com/blackhole-foundation/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-linux-arm64-v$version.plugin.sha256"
+          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-linux-arm64-v$version.plugin",
+          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/$plugin_id/v$version/$plugin_id-linux-arm64-v$version.plugin.sha256"
         }
       },
       "metadata": $(echo "$metadata" | jq 'del(.id, .version, .source)')
