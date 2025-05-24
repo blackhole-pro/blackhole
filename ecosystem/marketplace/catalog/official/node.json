@@ -8,7 +8,7 @@
   "homepage": "https://github.com/blackhole-pro/blackhole/tree/main/core/pkg/plugins/node",
   "repository": "https://github.com/blackhole-pro/blackhole",
   "documentation": "https://github.com/blackhole-pro/blackhole/tree/main/core/pkg/plugins/node/README.md",
-  "categories": ["networking", "p2p", "infrastructure"],
+  "categories": ["p2p"],
   "keywords": ["libp2p", "networking", "distributed", "mesh"],
   "compatibility": {
     "min_version": "1.0.0",

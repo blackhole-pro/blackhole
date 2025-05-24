@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2025-05-24T22:26:29Z",
+  "updated": "2025-05-24T22:30:19Z",
   "baseUrl": "https://github.com/blackhole-pro/blackhole/releases/download",
   "plugins": [
     {
@@ -37,9 +37,7 @@
   "repository": "https://github.com/blackhole-pro/blackhole",
   "documentation": "https://github.com/blackhole-pro/blackhole/tree/main/core/pkg/plugins/node/README.md",
   "categories": [
-    "networking",
-    "p2p",
-    "infrastructure"
+    "p2p"
   ],
   "keywords": [
     "libp2p",
