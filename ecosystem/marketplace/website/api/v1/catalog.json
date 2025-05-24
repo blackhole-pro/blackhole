@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2025-05-24T22:17:23Z",
+  "updated": "2025-05-24T22:26:29Z",
   "baseUrl": "https://github.com/blackhole-pro/blackhole/releases/download",
   "plugins": [
     {
@@ -33,9 +33,9 @@
   "description": "P2P networking and distributed node management for Blackhole",
   "author": "Blackhole Foundation",
   "license": "MIT",
-  "homepage": "https://github.com/blackhole-foundation/blackhole/tree/main/core/pkg/plugins/node",
-  "repository": "https://github.com/blackhole-foundation/blackhole",
-  "documentation": "https://docs.blackhole.io/plugins/node",
+  "homepage": "https://github.com/blackhole-pro/blackhole/tree/main/core/pkg/plugins/node",
+  "repository": "https://github.com/blackhole-pro/blackhole",
+  "documentation": "https://github.com/blackhole-pro/blackhole/tree/main/core/pkg/plugins/node/README.md",
   "categories": [
     "networking",
     "p2p",
@@ -65,10 +65,10 @@
     "events.publish"
   ],
   "downloads": {
-    "linux-amd64": "https://github.com/blackhole-foundation/blackhole/releases/download/plugins/node/v1.0.0/node-linux-amd64.plugin",
-    "linux-arm64": "https://github.com/blackhole-foundation/blackhole/releases/download/plugins/node/v1.0.0/node-linux-arm64.plugin",
-    "darwin-amd64": "https://github.com/blackhole-foundation/blackhole/releases/download/plugins/node/v1.0.0/node-darwin-amd64.plugin",
-    "darwin-arm64": "https://github.com/blackhole-foundation/blackhole/releases/download/plugins/node/v1.0.0/node-darwin-arm64.plugin"
+    "linux-amd64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-linux-amd64.plugin",
+    "linux-arm64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-linux-arm64.plugin",
+    "darwin-amd64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-darwin-amd64.plugin",
+    "darwin-arm64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-darwin-arm64.plugin"
   },
   "checksums": {
     "linux-amd64": "sha256:PLACEHOLDER",
@@ -77,8 +77,8 @@
     "darwin-arm64": "sha256:PLACEHOLDER"
   },
   "screenshots": [],
-  "changelog": "https://github.com/blackhole-foundation/blackhole/blob/main/core/pkg/plugins/node/CHANGELOG.md",
-  "support": "https://github.com/blackhole-foundation/blackhole/issues",
+  "changelog": "https://github.com/blackhole-pro/blackhole/blob/main/core/pkg/plugins/node/CHANGELOG.md",
+  "support": "https://github.com/blackhole-pro/blackhole/issues",
   "pricing": "free",
   "featured": true,
   "verified": true,
