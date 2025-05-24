@@ -88,9 +88,9 @@ jobs:
         run: |
           if [ -f CHANGELOG.md ]; then
             # Extract latest version section from CHANGELOG.md
-            awk '/^## \[?v?'${{ needs.determine-plugin.outputs.version }}'/{flag=1; next} /^## /{flag=0} flag' CHANGELOG.md > ../../release-notes.md
+            awk '/^## \[?v?'${{ needs.determine-plugin.outputs.version }}'/{flag=1; next} /^## /{flag=0} flag' CHANGELOG.md > ${{ github.workspace }}/release-notes.md
           else
-            echo "Release v${{ needs.determine-plugin.outputs.version }}" > ../../release-notes.md
+            echo "Release v${{ needs.determine-plugin.outputs.version }}" > ${{ github.workspace }}/release-notes.md
           fi
       
       - name: Create Release
