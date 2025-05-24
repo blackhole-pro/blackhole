@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2025-05-24T22:30:19Z",
+  "updated": "2025-05-24T22:32:42Z",
   "baseUrl": "https://github.com/blackhole-pro/blackhole/releases/download",
   "plugins": [
     {
@@ -8,6 +8,7 @@
       "name": "Node Plugin",
       "description": "P2P networking and distributed node management for Blackhole",
       "version": "1.0.0",
+      "category": "p2p",
       "official": true,
       "source": {},
       "downloads": {

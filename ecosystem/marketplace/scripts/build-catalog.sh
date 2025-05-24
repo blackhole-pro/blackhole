@@ -47,6 +47,9 @@ for metadata_file in "$CATALOG_DIR"/official/*.json; do
             continue
         fi
         
+        # Extract first category for main category field
+        category=$(echo "$metadata" | jq -r '.categories[0] // "uncategorized"')
+        
         # Build download URLs for each platform
         cat >> "$OUTPUT_FILE" << EOF
     {
@@ -54,6 +57,7 @@ for metadata_file in "$CATALOG_DIR"/official/*.json; do
       "name": "$(echo "$metadata" | jq -r '.name // .id')",
       "description": "$(echo "$metadata" | jq -r '.description // ""')",
       "version": "$version",
+      "category": "$category",
       "official": true,
       "source": $(echo "$metadata" | jq '.source // {}'),
       "downloads": {
