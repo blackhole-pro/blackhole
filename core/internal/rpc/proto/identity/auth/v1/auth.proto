@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package blackhole.identity.auth.v1;
+
+option go_package = "github.com/handcraftdev/blackhole/internal/rpc/proto/identity/auth/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// AuthService provides DID-based authentication functionality
+service AuthService {
+  // GenerateChallenge creates an authentication challenge for a DID
+  rpc GenerateChallenge(GenerateChallengeRequest) returns (Challenge);
+  
+  // VerifyResponse verifies an authentication response against a challenge
+  rpc VerifyResponse(AuthResponse) returns (AuthResult);
+}
+
+// GenerateChallengeRequest contains parameters for generating an authentication challenge
+message GenerateChallengeRequest {
+  // DID to authenticate
+  string did = 1;
+  
+  // Optional purpose for the authentication
+  string purpose = 2;
+}
+
+// Challenge represents an authentication challenge
+message Challenge {
+  // Unique challenge ID
+  string id = 1;
+  
+  // DID being authenticated
+  string did = 2;
+  
+  // Random nonce value
+  string nonce = 3;
+  
+  // Domain for the challenge
+  string domain = 4;
+  
+  // When the challenge was created
+  google.protobuf.Timestamp created = 5;
+  
+  // When the challenge expires
+  google.protobuf.Timestamp expires = 6;
+  
+  // Purpose of the authentication
+  string purpose = 7;
+}
+
+// AuthResponse represents an authentication response
+message AuthResponse {
+  // Unique response ID
+  string id = 1;
+  
+  // Challenge ID being responded to
+  string challenge_id = 2;
+  
+  // DID being authenticated
+  string did = 3;
+  
+  // Nonce from the challenge
+  string nonce = 4;
+  
+  // When the response was created
+  google.protobuf.Timestamp created = 5;
+  
+  // ID of the verification method used
+  string verification_method_id = 6;
+  
+  // Type of signature (Ed25519, Secp256k1, etc.)
+  string signature_type = 7;
+  
+  // Signature bytes
+  bytes signature = 8;
+  
+  // Protection level for privacy
+  ProtectionLevel protection_level = 9;
+}
+
+// ProtectionLevel indicates the privacy protection level
+enum ProtectionLevel {
+  // Standard DID authentication with full DID disclosure
+  PROTECTION_STANDARD = 0;
+  
+  // Authentication with pseudonymous identifiers
+  PROTECTION_PSEUDONYMOUS = 1;
+  
+  // Authentication without revealing the DID
+  PROTECTION_ANONYMOUS = 2;
+}
+
+// AuthResult represents the result of an authentication operation
+message AuthResult {
+  // Whether authentication was successful
+  bool verified = 1;
+  
+  // DID that was authenticated
+  string did = 2;
+  
+  // Verification method ID used
+  string verification_method_id = 3;
+  
+  // Error message if verification failed
+  string error = 4;
+  
+  // When authentication was performed
+  google.protobuf.Timestamp authentication_date_time = 5;
+  
+  // Privacy-preserving identifier derived from the DID
+  string pseudonymous_identifier = 6;
+}

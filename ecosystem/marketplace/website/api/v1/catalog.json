@@ -1,72 +1,8 @@
 {
   "version": "1.0",
-  "updated": "2025-05-24T19:35:10Z",
+  "updated": "2025-05-24T19:45:51Z",
   "baseUrl": "https://github.com/blackhole-pro/blackhole/releases/download",
   "plugins": [
-    {
-      "id": "node",
-      "name": "Node Plugin",
-      "description": "P2P networking and distributed communication plugin for Blackhole",
-      "version": "1.0.0",
-      "official": true,
-      "source": {
-  "type": "monorepo",
-  "path": "core/pkg/plugins/node"
-},
-      "downloads": {
-        "darwin-amd64": {
-          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-darwin-amd64-v1.0.0.plugin",
-          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-darwin-amd64-v1.0.0.plugin.sha256"
-        },
-        "darwin-arm64": {
-          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-darwin-arm64-v1.0.0.plugin",
-          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-darwin-arm64-v1.0.0.plugin.sha256"
-        },
-        "linux-amd64": {
-          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-linux-amd64-v1.0.0.plugin",
-          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-linux-amd64-v1.0.0.plugin.sha256"
-        },
-        "linux-arm64": {
-          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-linux-arm64-v1.0.0.plugin",
-          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-linux-arm64-v1.0.0.plugin.sha256"
-        }
-      },
-      "metadata": {
-  "name": "Node Plugin",
-  "description": "P2P networking and distributed communication plugin for Blackhole",
-  "category": "networking",
-  "author": {
-    "name": "Blackhole Protocol",
-    "url": "https://github.com/blackhole-pro"
-  },
-  "license": "MIT",
-  "repository": "https://github.com/blackhole-pro/blackhole",
-  "documentation": "https://github.com/blackhole-pro/blackhole/tree/main/core/pkg/plugins/node/docs",
-  "keywords": [
-    "p2p",
-    "networking",
-    "libp2p",
-    "distributed",
-    "mesh"
-  ],
-  "requirements": {
-    "blackhole": ">=1.0.0",
-    "mesh": ">=1.0.0"
-  },
-  "capabilities": [
-    "network",
-    "filesystem:read",
-    "filesystem:write",
-    "mesh:publish",
-    "mesh:subscribe"
-  ],
-  "resources": {
-    "memory": "256M-1G",
-    "cpu": "0.2-2.0",
-    "disk": "500M"
-  }
-}
-    }
 
   ]
 }

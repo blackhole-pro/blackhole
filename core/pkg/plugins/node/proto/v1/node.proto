@@ -1,0 +1,299 @@
+syntax = "proto3";
+
+package blackhole.plugin.node.v1;
+
+option go_package = "github.com/handcraftdev/blackhole/core/pkg/plugins/node/proto/v1;nodev1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+// NodePlugin defines the complete interface for the node plugin
+service NodePlugin {
+  // Lifecycle methods - specific to node plugin needs
+  rpc Initialize(InitializeRequest) returns (InitializeResponse);
+  rpc Start(StartRequest) returns (StartResponse);
+  rpc Stop(StopRequest) returns (StopResponse);
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+  rpc GetInfo(GetInfoRequest) returns (GetInfoResponse);
+  
+  // P2P networking methods
+  rpc ListPeers(ListPeersRequest) returns (ListPeersResponse);
+  rpc ConnectPeer(ConnectPeerRequest) returns (ConnectPeerResponse);
+  rpc DisconnectPeer(DisconnectPeerRequest) returns (DisconnectPeerResponse);
+  rpc GetNetworkStatus(GetNetworkStatusRequest) returns (GetNetworkStatusResponse);
+  rpc DiscoverPeers(DiscoverPeersRequest) returns (DiscoverPeersResponse);
+  
+  // Streaming methods for real-time updates
+  rpc StreamPeerEvents(StreamPeerEventsRequest) returns (stream PeerEvent);
+  rpc StreamNetworkMetrics(StreamNetworkMetricsRequest) returns (stream NetworkMetrics);
+}
+
+// Node-specific initialization with P2P config
+message InitializeRequest {
+  NodeConfig config = 1;
+  string instance_id = 2;
+}
+
+message NodeConfig {
+  string node_id = 1;
+  int32 p2p_port = 2;
+  repeated string listen_addresses = 3;
+  repeated string bootstrap_peers = 4;
+  bool enable_discovery = 5;
+  string discovery_method = 6;
+  int32 max_peers = 7;
+  int32 max_bandwidth_mbps = 8;
+  google.protobuf.Duration connection_timeout = 9;
+  bool enable_encryption = 10;
+  string private_key_path = 11;
+}
+
+message InitializeResponse {
+  bool success = 1;
+  string message = 2;
+  string peer_id = 3;  // Generated peer ID
+  repeated string multiaddrs = 4;  // Node's multiaddresses
+}
+
+// Start with network readiness check
+message StartRequest {
+  bool wait_for_ready = 1;
+  google.protobuf.Duration ready_timeout = 2;
+}
+
+message StartResponse {
+  bool success = 1;
+  string message = 2;
+  repeated Endpoint endpoints = 3;
+  NetworkReadiness readiness = 4;
+}
+
+message Endpoint {
+  string protocol = 1;  // tcp, quic, websocket
+  string address = 2;
+  bool secure = 3;
+}
+
+message NetworkReadiness {
+  bool is_reachable = 1;
+  bool has_public_ip = 2;
+  string nat_type = 3;
+  repeated string public_addrs = 4;
+}
+
+// Graceful stop with connection draining
+message StopRequest {
+  bool force = 1;
+  google.protobuf.Duration drain_timeout = 2;
+  string reason = 3;
+}
+
+message StopResponse {
+  bool success = 1;
+  string message = 2;
+  int32 connections_closed = 3;
+}
+
+// Health check with network diagnostics
+message HealthCheckRequest {
+  bool include_diagnostics = 1;
+}
+
+message HealthCheckResponse {
+  bool healthy = 1;
+  string status = 2;  // healthy, degraded, unhealthy
+  NetworkDiagnostics diagnostics = 3;
+}
+
+message NetworkDiagnostics {
+  int32 active_connections = 1;
+  int32 pending_connections = 2;
+  double bandwidth_usage_mbps = 3;
+  double cpu_usage_percent = 4;
+  double memory_usage_mb = 5;
+  map<string, string> issues = 6;
+}
+
+// Plugin info with network capabilities
+message GetInfoRequest {}
+
+message GetInfoResponse {
+  string name = 1;
+  string version = 2;
+  string description = 3;
+  string peer_id = 4;
+  repeated string protocols = 5;  // Supported protocols
+  repeated string listen_addrs = 6;
+  NodeCapabilities capabilities = 7;
+  NodeStatus status = 8;
+}
+
+message NodeCapabilities {
+  bool supports_relay = 1;
+  bool supports_nat_traversal = 2;
+  bool supports_dht = 3;
+  bool supports_pubsub = 4;
+  repeated string transport_protocols = 5;
+}
+
+message NodeStatus {
+  string state = 1;  // initializing, running, degraded, error
+  google.protobuf.Timestamp started_at = 2;
+  int64 uptime_seconds = 3;
+  string version = 4;
+}
+
+// Peer management messages
+message ListPeersRequest {
+  string status_filter = 1;  // connected, connecting, disconnected
+  int32 limit = 2;
+  int32 offset = 3;
+  bool include_metrics = 4;
+}
+
+message ListPeersResponse {
+  repeated PeerInfo peers = 1;
+  int32 total_count = 2;
+  PeerStats stats = 3;
+}
+
+message PeerInfo {
+  string id = 1;
+  repeated string addrs = 2;
+  string status = 3;
+  google.protobuf.Timestamp connected_at = 4;
+  google.protobuf.Timestamp last_seen = 5;
+  PeerMetrics metrics = 6;
+  repeated string protocols = 7;
+  string agent_version = 8;
+  map<string, string> metadata = 9;
+}
+
+message PeerMetrics {
+  int64 bytes_sent = 1;
+  int64 bytes_received = 2;
+  int64 messages_sent = 3;
+  int64 messages_received = 4;
+  double latency_ms = 5;
+  double packet_loss = 6;
+}
+
+message PeerStats {
+  int32 total_known = 1;
+  int32 connected = 2;
+  int32 connecting = 3;
+  int32 disconnected = 4;
+}
+
+message ConnectPeerRequest {
+  string peer_id = 1;
+  repeated string addrs = 2;
+  google.protobuf.Duration timeout = 3;
+  map<string, string> metadata = 4;
+}
+
+message ConnectPeerResponse {
+  bool success = 1;
+  string message = 2;
+  PeerInfo peer_info = 3;
+}
+
+message DisconnectPeerRequest {
+  string peer_id = 1;
+  string reason = 2;
+  bool blacklist = 3;  // Prevent reconnection
+}
+
+message DisconnectPeerResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Network status with detailed metrics
+message GetNetworkStatusRequest {
+  bool include_peers = 1;
+  bool include_bandwidth = 2;
+  bool include_routing = 3;
+}
+
+message GetNetworkStatusResponse {
+  NetworkHealth health = 1;
+  NetworkMetrics metrics = 2;
+  BandwidthStats bandwidth = 3;
+  RoutingInfo routing = 4;
+}
+
+message NetworkHealth {
+  string status = 1;  // healthy, degraded, unhealthy
+  double score = 2;  // 0.0 to 1.0
+  repeated string issues = 3;
+  google.protobuf.Timestamp last_updated = 4;
+}
+
+message NetworkMetrics {
+  int64 total_connections = 1;
+  int64 active_connections = 2;
+  int64 failed_connections = 3;
+  int64 bytes_sent = 4;
+  int64 bytes_received = 5;
+  int64 messages_sent = 6;
+  int64 messages_received = 7;
+  google.protobuf.Timestamp started_at = 8;
+}
+
+message BandwidthStats {
+  double rate_in_mbps = 1;
+  double rate_out_mbps = 2;
+  int64 total_in = 3;
+  int64 total_out = 4;
+  double limit_mbps = 5;
+}
+
+message RoutingInfo {
+  int32 routing_table_size = 1;
+  repeated string protocols = 2;
+  bool is_reachable = 3;
+  string nat_status = 4;
+}
+
+// Peer discovery
+message DiscoverPeersRequest {
+  string method = 1;  // mdns, dht, bootstrap, all
+  int32 limit = 2;
+  google.protobuf.Duration timeout = 3;
+  map<string, string> filters = 4;
+}
+
+message DiscoverPeersResponse {
+  repeated DiscoveredPeer peers = 1;
+  string method_used = 2;
+  int32 total_discovered = 3;
+}
+
+message DiscoveredPeer {
+  string id = 1;
+  repeated string addrs = 2;
+  string source = 3;  // mdns, dht, bootstrap
+  double confidence = 4;  // 0.0 to 1.0
+  map<string, string> metadata = 5;
+}
+
+// Streaming events
+message StreamPeerEventsRequest {
+  repeated string event_types = 1;  // connected, disconnected, discovered
+  repeated string peer_ids = 2;  // Empty for all peers
+}
+
+message PeerEvent {
+  string type = 1;
+  string peer_id = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  google.protobuf.Struct data = 4;
+}
+
+message StreamNetworkMetricsRequest {
+  google.protobuf.Duration interval = 1;
+  repeated string metrics = 2;  // bandwidth, connections, latency
+}
+
+// NetworkMetrics message is reused from above

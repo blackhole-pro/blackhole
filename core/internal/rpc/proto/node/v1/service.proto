@@ -1,0 +1,157 @@
+syntax = "proto3";
+
+package blackhole.node.v1;
+
+option go_package = "github.com/handcraftdev/blackhole/internal/rpc/gen/node/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// NodeService provides node management and P2P networking functionality
+service NodeService {
+  // GetNodeInfo returns information about this node
+  rpc GetNodeInfo(GetNodeInfoRequest) returns (NodeInfo);
+  
+  // ListPeers returns list of connected peers
+  rpc ListPeers(ListPeersRequest) returns (ListPeersResponse);
+  
+  // ConnectToPeer establishes connection to a peer
+  rpc ConnectToPeer(ConnectToPeerRequest) returns (ConnectToPeerResponse);
+  
+  // DisconnectFromPeer removes connection to a peer
+  rpc DisconnectFromPeer(DisconnectFromPeerRequest) returns (DisconnectFromPeerResponse);
+  
+  // GetNetworkStatus returns network connectivity status
+  rpc GetNetworkStatus(GetNetworkStatusRequest) returns (NetworkStatus);
+  
+  // DiscoverPeers initiates peer discovery
+  rpc DiscoverPeers(DiscoverPeersRequest) returns (DiscoverPeersResponse);
+}
+
+// GetNodeInfoRequest for getting node information
+message GetNodeInfoRequest {
+  // Optional fields for filtering info
+  bool include_peers = 1;
+  bool include_metrics = 2;
+}
+
+// NodeInfo represents information about this node
+message NodeInfo {
+  // Node identification
+  string node_id = 1;
+  string version = 2;
+  
+  // Network information
+  repeated string addresses = 3;
+  int32 port = 4;
+  
+  // Status information
+  google.protobuf.Timestamp started_at = 5;
+  string status = 6;
+  
+  // Metrics
+  NodeMetrics metrics = 7;
+  
+  // Connected peers
+  repeated PeerInfo peers = 8;
+}
+
+// NodeMetrics contains node performance metrics
+message NodeMetrics {
+  int64 total_connections = 1;
+  int64 active_connections = 2;
+  int64 bytes_sent = 3;
+  int64 bytes_received = 4;
+  int64 messages_sent = 5;
+  int64 messages_received = 6;
+  google.protobuf.Timestamp last_updated = 7;
+}
+
+// PeerInfo represents information about a connected peer
+message PeerInfo {
+  string peer_id = 1;
+  string address = 2;
+  string status = 3;
+  google.protobuf.Timestamp connected_at = 4;
+  int64 bytes_sent = 5;
+  int64 bytes_received = 6;
+}
+
+// ListPeersRequest for listing connected peers
+message ListPeersRequest {
+  // Optional filters
+  string status_filter = 1; // "connected", "disconnected", "all"
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+// ListPeersResponse contains list of peers
+message ListPeersResponse {
+  repeated PeerInfo peers = 1;
+  int32 total_count = 2;
+}
+
+// ConnectToPeerRequest for connecting to a peer
+message ConnectToPeerRequest {
+  string peer_address = 1;
+  int32 timeout_seconds = 2;
+  map<string, string> metadata = 3;
+}
+
+// ConnectToPeerResponse for connection result
+message ConnectToPeerResponse {
+  bool success = 1;
+  string message = 2;
+  string peer_id = 3;
+}
+
+// DisconnectFromPeerRequest for disconnecting from peer
+message DisconnectFromPeerRequest {
+  string peer_id = 1;
+  string reason = 2;
+}
+
+// DisconnectFromPeerResponse for disconnection result
+message DisconnectFromPeerResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// GetNetworkStatusRequest for getting network status
+message GetNetworkStatusRequest {
+  bool include_detailed_metrics = 1;
+}
+
+// NetworkStatus represents overall network connectivity status
+message NetworkStatus {
+  string status = 1; // "healthy", "degraded", "offline"
+  int32 connected_peers = 2;
+  int32 total_discovered_peers = 3;
+  double network_health_score = 4; // 0.0 - 1.0
+  google.protobuf.Timestamp last_updated = 5;
+  
+  // Network metrics
+  NetworkMetrics metrics = 6;
+}
+
+// NetworkMetrics contains network-level metrics
+message NetworkMetrics {
+  double average_latency_ms = 1;
+  double packet_loss_rate = 2;
+  int64 total_bandwidth_used = 3;
+  int32 failed_connections = 4;
+  int32 successful_connections = 5;
+}
+
+// DiscoverPeersRequest for peer discovery
+message DiscoverPeersRequest {
+  string discovery_method = 1; // "dht", "bootstrap", "local"
+  int32 max_peers = 2;
+  int32 timeout_seconds = 3;
+}
+
+// DiscoverPeersResponse for discovery results
+message DiscoverPeersResponse {
+  repeated string discovered_addresses = 1;
+  int32 total_discovered = 2;
+  string discovery_method_used = 3;
+}

@@ -1,0 +1,190 @@
+# Blackhole Node Plugin Manifest
+name: node
+version: 1.0.0
+api_version: v1
+description: "P2P networking, node management, and distributed communication plugin"
+author: "Blackhole Foundation"
+license: MIT
+homepage: https://github.com/blackhole/core/pkg/plugins/node
+repository: https://github.com/blackhole/core
+
+# Plugin classification
+type: service
+architecture:
+  - darwin-amd64
+  - darwin-arm64
+  - linux-amd64
+  - linux-arm64
+
+# Binary configuration
+binary:
+  name: node-plugin
+  main: bin/${GOOS}-${GOARCH}/
+
+# Network configuration
+network:
+  protocol: grpc
+  transport: unix
+  service_name: blackhole.plugin.node.v1.NodeService
+  default_port: 0  # Dynamic port allocation
+
+# Resource requirements
+resources:
+  min_memory: 256M
+  max_memory: 1G
+  min_cpu: 0.2
+  max_cpu: 2.0
+  disk_space: 500M
+  network_bandwidth: 10M  # Minimum network bandwidth
+
+# Plugin dependencies
+dependencies:
+  mesh: ">=1.0.0"
+  plugins:
+    - name: identity
+      version: ">=1.0.0"
+      optional: false
+      description: "Required for peer authentication"
+
+# Security capabilities
+capabilities:
+  - network           # Full network access for P2P
+  - filesystem:read   # Read configuration files
+  - filesystem:write  # Write peer data and state
+  - mesh:publish      # Publish to mesh topics
+  - mesh:subscribe    # Subscribe to mesh topics
+  - process:spawn     # May spawn helper processes
+
+# Health check configuration
+health:
+  interval: 30s
+  timeout: 5s
+  retries: 3
+  startup_delay: 10s  # Wait before first check
+
+# Metrics exposed
+metrics:
+  - name: peers_connected
+    type: gauge
+    description: "Number of connected peers"
+  - name: messages_sent
+    type: counter
+    description: "Total messages sent"
+  - name: messages_received
+    type: counter
+    description: "Total messages received"
+  - name: bandwidth_in
+    type: gauge
+    description: "Incoming bandwidth usage"
+  - name: bandwidth_out
+    type: gauge
+    description: "Outgoing bandwidth usage"
+
+# Configuration schema
+config_schema:
+  type: object
+  required: ["p2p"]
+  properties:
+    p2p:
+      type: object
+      required: ["listen_addresses"]
+      properties:
+        listen_addresses:
+          type: array
+          items:
+            type: string
+          default: ["/ip4/0.0.0.0/tcp/0", "/ip6/::/tcp/0"]
+          description: "P2P listen addresses"
+        
+        bootstrap_peers:
+          type: array
+          items:
+            type: string
+          description: "Bootstrap peer multiaddresses"
+        
+        max_connections:
+          type: integer
+          default: 100
+          minimum: 10
+          maximum: 1000
+          description: "Maximum peer connections"
+        
+        enable_relay:
+          type: boolean
+          default: true
+          description: "Enable relay functionality"
+        
+        enable_nat:
+          type: boolean
+          default: true
+          description: "Enable NAT traversal"
+    
+    discovery:
+      type: object
+      properties:
+        mdns:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: true
+              description: "Enable mDNS discovery"
+            
+            interval:
+              type: string
+              default: "1m"
+              description: "mDNS discovery interval"
+        
+        dht:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: true
+              description: "Enable DHT"
+            
+            mode:
+              type: string
+              enum: ["client", "server", "auto"]
+              default: "auto"
+              description: "DHT operation mode"
+    
+    storage:
+      type: object
+      properties:
+        path:
+          type: string
+          default: "~/.blackhole/node/data"
+          description: "Data storage path"
+        
+        max_size:
+          type: string
+          default: "1GB"
+          description: "Maximum storage size"
+
+# Plugin features
+features:
+  - p2p-networking
+  - peer-discovery
+  - message-routing
+  - nat-traversal
+  - relay-service
+  - distributed-hash-table
+  - pubsub-messaging
+  - peer-reputation
+
+# Supported protocols
+protocols:
+  - /blackhole/1.0.0
+  - /ipfs/kad/1.0.0
+  - /libp2p/circuit/relay/0.2.0
+  - /libp2p/autonat/1.0.0
+  - /meshsub/1.1.0
+
+# Plugin tags for marketplace
+tags:
+  - networking
+  - p2p
+  - distributed
+  - communication
+  - mesh

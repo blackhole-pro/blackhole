@@ -1,0 +1,145 @@
+name: Publish Plugins
+on:
+  push:
+    tags:
+      - 'plugins/*/v*'  # Trigger on tags like plugins/node/v1.0.0
+
+jobs:
+  determine-plugin:
+    runs-on: ubuntu-latest
+    outputs:
+      plugin: ${{ steps.extract.outputs.plugin }}
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - name: Extract plugin info from tag
+        id: extract
+        run: |
+          # Extract from tag like plugins/node/v1.0.0
+          TAG=${GITHUB_REF#refs/tags/}
+          PLUGIN=$(echo $TAG | cut -d'/' -f2)
+          VERSION=$(echo $TAG | cut -d'/' -f3 | sed 's/^v//')
+          echo "plugin=$PLUGIN" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building $PLUGIN plugin version $VERSION"
+
+  build-and-publish:
+    needs: determine-plugin
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [darwin, linux]
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      
+      - name: Build plugin
+        working-directory: core/pkg/plugins/${{ needs.determine-plugin.outputs.plugin }}
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: 0
+        run: |
+          # Build the plugin
+          go build -o ${{ needs.determine-plugin.outputs.plugin }}-${{ matrix.os }}-${{ matrix.arch }} .
+          
+          # Create plugin package
+          mkdir -p dist
+          tar -czf dist/${{ needs.determine-plugin.outputs.plugin }}-${{ matrix.os }}-${{ matrix.arch }}-v${{ needs.determine-plugin.outputs.version }}.plugin \
+            ${{ needs.determine-plugin.outputs.plugin }}-${{ matrix.os }}-${{ matrix.arch }} \
+            plugin.yaml \
+            proto/ \
+            docs/ \
+            LICENSE* \
+            CHANGELOG* || true
+          
+          # Generate checksum
+          cd dist
+          sha256sum *.plugin > ${{ needs.determine-plugin.outputs.plugin }}-${{ matrix.os }}-${{ matrix.arch }}-v${{ needs.determine-plugin.outputs.version }}.plugin.sha256
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: plugin-${{ matrix.os }}-${{ matrix.arch }}
+          path: core/pkg/plugins/${{ needs.determine-plugin.outputs.plugin }}/dist/*
+
+  create-release:
+    needs: [determine-plugin, build-and-publish]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+      
+      - name: Prepare release files
+        run: |
+          mkdir -p release-files
+          find artifacts -name "*.plugin*" -exec cp {} release-files/ \;
+          ls -la release-files/
+      
+      - name: Extract changelog
+        working-directory: core/pkg/plugins/${{ needs.determine-plugin.outputs.plugin }}
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            # Extract latest version section from CHANGELOG.md
+            awk '/^## \[?v?'${{ needs.determine-plugin.outputs.version }}'/{flag=1; next} /^## /{flag=0} flag' CHANGELOG.md > ../../release-notes.md
+          else
+            echo "Release v${{ needs.determine-plugin.outputs.version }}" > ../../release-notes.md
+          fi
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "${{ needs.determine-plugin.outputs.plugin }} Plugin v${{ needs.determine-plugin.outputs.version }}"
+          tag_name: "plugins/${{ needs.determine-plugin.outputs.plugin }}/v${{ needs.determine-plugin.outputs.version }}"
+          files: release-files/*
+          body_path: release-notes.md
+          prerelease: ${{ contains(needs.determine-plugin.outputs.version, '-') }}
+
+  update-marketplace:
+    needs: [determine-plugin, create-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Update plugin metadata
+        run: |
+          PLUGIN=${{ needs.determine-plugin.outputs.plugin }}
+          VERSION=${{ needs.determine-plugin.outputs.version }}
+          
+          # Create/update plugin metadata
+          mkdir -p ecosystem/marketplace/catalog/official
+          
+          # Generate metadata from plugin.yaml
+          cat > ecosystem/marketplace/catalog/official/${PLUGIN}.json << EOF
+          {
+            "id": "${PLUGIN}",
+            "version": "${VERSION}",
+            "updated": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "source": {
+              "type": "monorepo",
+              "path": "core/pkg/plugins/${PLUGIN}"
+            }
+          }
+          EOF
+      
+      - name: Rebuild marketplace catalog
+        run: |
+          if [ -f ecosystem/marketplace/scripts/build-catalog.sh ]; then
+            bash ecosystem/marketplace/scripts/build-catalog.sh
+          fi
+      
+      - name: Commit marketplace updates
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: 'ecosystem/marketplace/catalog/'
+          message: 'Update ${{ needs.determine-plugin.outputs.plugin }} plugin to v${{ needs.determine-plugin.outputs.version }}'
+          default_author: github_actions

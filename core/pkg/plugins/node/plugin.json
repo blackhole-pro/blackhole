@@ -1,0 +1,120 @@
+{
+  "name": "node",
+  "version": "1.0.0",
+  "description": "P2P networking and peer management plugin for Blackhole Foundation",
+  "author": "Blackhole Team",
+  "license": "Apache-2.0",
+  "homepage": "https://blackhole.foundation/plugins/node",
+  "repository": "https://github.com/blackhole/plugins/node",
+  "binary": "node-plugin",
+  "type": "process",
+  "isolation": "process",
+  "capabilities": [
+    {
+      "name": "p2p-networking",
+      "version": "1.0",
+      "description": "Peer-to-peer networking using libp2p"
+    },
+    {
+      "name": "peer-discovery",
+      "version": "1.0",
+      "description": "Automatic peer discovery via mDNS, DHT, and bootstrap nodes"
+    },
+    {
+      "name": "network-health",
+      "version": "1.0",
+      "description": "Network connectivity and health monitoring"
+    }
+  ],
+  "permissions": [
+    {
+      "resource": "network",
+      "actions": ["connect", "listen", "broadcast"],
+      "description": "Network access for P2P communication"
+    },
+    {
+      "resource": "peers",
+      "actions": ["read", "write", "delete"],
+      "description": "Manage peer connections"
+    },
+    {
+      "resource": "system.network",
+      "actions": ["read"],
+      "description": "Read network interface information"
+    }
+  ],
+  "resourceRequirements": {
+    "minMemoryMB": 128,
+    "maxMemoryMB": 512,
+    "minCPUMHz": 100,
+    "maxCPUMHz": 1000
+  },
+  "configuration": {
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "nodeId": {
+          "type": "string",
+          "description": "Unique node identifier"
+        },
+        "p2pPort": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 4001
+        },
+        "listenAddresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["/ip4/0.0.0.0/tcp/4001"]
+        },
+        "bootstrapPeers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "enableDiscovery": {
+          "type": "boolean",
+          "default": true
+        },
+        "discoveryMethod": {
+          "type": "string",
+          "enum": ["mdns", "dht", "bootstrap"],
+          "default": "bootstrap"
+        },
+        "maxPeers": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 50
+        },
+        "maxBandwidthMbps": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 100
+        }
+      },
+      "required": ["nodeId"]
+    },
+    "defaults": {
+      "nodeId": "",
+      "p2pPort": 4001,
+      "listenAddresses": ["/ip4/0.0.0.0/tcp/4001"],
+      "bootstrapPeers": [],
+      "enableDiscovery": true,
+      "discoveryMethod": "bootstrap",
+      "discoveryInterval": "30s",
+      "healthCheckInterval": "10s",
+      "peerTimeout": "60s",
+      "maxPeers": 50,
+      "maxBandwidthMbps": 100,
+      "connectionTimeout": "30s",
+      "enableEncryption": true
+    }
+  },
+  "dependencies": [],
+  "tags": ["networking", "p2p", "core"]
+}

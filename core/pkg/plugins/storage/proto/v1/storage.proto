@@ -1,0 +1,139 @@
+syntax = "proto3";
+
+package blackhole.plugin.storage.v1;
+
+option go_package = "github.com/handcraftdev/blackhole/core/pkg/plugins/storage/proto/v1;storagev1";
+
+import "google/protobuf/timestamp.proto";
+
+// StoragePlugin defines the interface for storage plugins
+service StoragePlugin {
+  // Lifecycle methods - specific to storage needs
+  rpc Initialize(InitializeRequest) returns (InitializeResponse);
+  rpc Start(StartRequest) returns (StartResponse);
+  rpc Stop(StopRequest) returns (StopResponse);
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+  rpc GetInfo(GetInfoRequest) returns (GetInfoResponse);
+  
+  // Storage operations
+  rpc Store(StoreRequest) returns (StoreResponse);
+  rpc Retrieve(RetrieveRequest) returns (RetrieveResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+  rpc List(ListRequest) returns (ListResponse);
+  
+  // Streaming operations
+  rpc StreamStore(stream StoreChunk) returns (StoreResponse);
+  rpc StreamRetrieve(RetrieveRequest) returns (stream DataChunk);
+  
+  // Storage management
+  rpc GetStorageStats(GetStorageStatsRequest) returns (GetStorageStatsResponse);
+  rpc Compact(CompactRequest) returns (CompactResponse);
+  rpc Backup(BackupRequest) returns (stream BackupChunk);
+  rpc Restore(stream RestoreChunk) returns (RestoreResponse);
+}
+
+// Storage-specific initialization
+message InitializeRequest {
+  StorageConfig config = 1;
+  string instance_id = 2;
+}
+
+message StorageConfig {
+  string data_dir = 1;
+  int64 max_size_gb = 2;
+  string storage_backend = 3;  // filesystem, s3, ipfs, etc
+  bool enable_compression = 4;
+  bool enable_encryption = 5;
+  string encryption_key_id = 6;
+  int32 replication_factor = 7;
+  map<string, string> backend_config = 8;
+}
+
+message InitializeResponse {
+  bool success = 1;
+  string message = 2;
+  StorageCapabilities capabilities = 3;
+}
+
+message StorageCapabilities {
+  bool supports_streaming = 1;
+  bool supports_encryption = 2;
+  bool supports_compression = 3;
+  bool supports_versioning = 4;
+  int64 max_object_size = 5;
+  repeated string supported_backends = 6;
+}
+
+// Different from node - storage doesn't need network readiness
+message StartRequest {
+  bool verify_integrity = 1;
+  bool rebuild_index = 2;
+}
+
+message StartResponse {
+  bool success = 1;
+  string message = 2;
+  StorageReadiness readiness = 3;
+}
+
+message StorageReadiness {
+  int64 total_space = 1;
+  int64 used_space = 2;
+  int64 available_space = 3;
+  int32 object_count = 4;
+  bool index_ready = 5;
+}
+
+// Storage graceful shutdown
+message StopRequest {
+  bool flush_pending = 1;
+  bool create_checkpoint = 2;
+}
+
+message StopResponse {
+  bool success = 1;
+  string message = 2;
+  int32 pending_operations = 3;
+  string checkpoint_id = 4;
+}
+
+// Storage health includes data integrity
+message HealthCheckRequest {
+  bool verify_integrity = 1;
+  int32 sample_size = 2;
+}
+
+message HealthCheckResponse {
+  bool healthy = 1;
+  string status = 2;
+  StorageDiagnostics diagnostics = 3;
+}
+
+message StorageDiagnostics {
+  int64 corrupted_objects = 1;
+  int64 missing_objects = 2;
+  double disk_usage_percent = 3;
+  double iops_usage = 4;
+  int32 pending_operations = 5;
+  map<string, string> backend_health = 6;
+}
+
+// Storage operations
+message StoreRequest {
+  string key = 1;
+  bytes data = 2;
+  map<string, string> metadata = 3;
+  int32 ttl_seconds = 4;
+  bool encrypt = 5;
+  bool compress = 6;
+}
+
+message StoreResponse {
+  bool success = 1;
+  string message = 2;
+  string version_id = 3;
+  string checksum = 4;
+  int64 size_bytes = 5;
+}
+
+// ... Additional storage-specific messages

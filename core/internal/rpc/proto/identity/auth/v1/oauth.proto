@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package blackhole.identity.auth.v1;
+
+option go_package = "github.com/handcraftdev/blackhole/internal/rpc/proto/identity/auth/v1";
+
+import "google/protobuf/timestamp.proto";
+import "identity/auth/v1/auth.proto";
+
+// OAuthService provides OAuth/OpenID Connect authentication functionality
+service OAuthService {
+  // GetOAuthURL returns an authentication URL for an OAuth provider
+  rpc GetOAuthURL(OAuthURLRequest) returns (OAuthURLResponse);
+  
+  // VerifyOAuthCallback verifies an OAuth callback
+  rpc VerifyOAuthCallback(OAuthCallbackRequest) returns (AuthResult);
+}
+
+// OAuthURLRequest is the request for GetOAuthURL
+message OAuthURLRequest {
+  // OAuth provider (google, facebook, apple)
+  string provider = 1;
+  
+  // Redirect URI to return to after authentication
+  string redirect_uri = 2;
+  
+  // State parameter for CSRF protection
+  string state = 3;
+  
+  // Nonce parameter for replay protection
+  string nonce = 4;
+}
+
+// OAuthURLResponse is the response from GetOAuthURL
+message OAuthURLResponse {
+  // Authentication URL to redirect the user to
+  string auth_url = 1;
+  
+  // State parameter for verification
+  string state = 2;
+  
+  // Expiration time for the URL
+  google.protobuf.Timestamp expires = 3;
+}
+
+// OAuthCallbackRequest is the request for VerifyOAuthCallback
+message OAuthCallbackRequest {
+  // OAuth provider (google, facebook, apple)
+  string provider = 1;
+  
+  // Authorization code from the OAuth provider
+  string code = 2;
+  
+  // State parameter for CSRF protection
+  string state = 3;
+  
+  // Redirect URI used in the original request
+  string redirect_uri = 4;
+}
+
+// OAuthUserData contains user data from OAuth providers
+message OAuthUserData {
+  // User ID from the OAuth provider
+  string id = 1;
+  
+  // User email
+  string email = 2;
+  
+  // Whether the email is verified
+  bool verified_email = 3;
+  
+  // User name
+  string name = 4;
+  
+  // User given name
+  string given_name = 5;
+  
+  // User family name
+  string family_name = 6;
+  
+  // User picture URL
+  string picture = 7;
+  
+  // User locale
+  string locale = 8;
+  
+  // OAuth provider
+  string provider = 9;
+}

@@ -1,0 +1,20 @@
+{
+  "name": "hello-plugin",
+  "version": "1.0.0",
+  "description": "A simple hello world plugin",
+  "author": "Blackhole Team",
+  "license": "MIT",
+  "source": {
+    "type": "local",
+    "path": "./hello-plugin"
+  },
+  "isolation": "process",
+  "resources": {
+    "cpu": 10,
+    "memory": 64,
+    "disk": 10,
+    "network": 1
+  },
+  "capabilities": ["integration"],
+  "permissions": []
+}

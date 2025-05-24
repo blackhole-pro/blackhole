@@ -1,810 +1,667 @@
-# Blackhole: Distributed Content Sharing Platform
+# Blackhole Foundation: Framework Architecture & Implementation
 
-## Project Overview
+## Overview
 
-Blackhole is an open-source distributed content sharing platform built on decentralized technologies. It leverages IPFS and Filecoin for content storage, Root Network for content ledger functionality, decentralized identifiers (DIDs) for self-sovereign identity, and provides a comprehensive SDK for developers to build their own applications.
+Blackhole Foundation is a revolutionary **distributed computing framework** that enables fault-isolated, hot-loadable plugin execution across any network topology. This document details the framework's architecture, implementation strategy, and development roadmap.
 
-## Core Principles
+## Framework Philosophy
 
-1. **Decentralized Infrastructure**: Content storage and delivery without central points of failure
-2. **Open Source Development**: Community-driven innovation and transparency
-3. **Developer-First**: Comprehensive SDKs and tools for building on the platform
-4. **User Ownership**: Users maintain control of their content and data
-5. **Modular Architecture**: Composable components that can be used independently
-6. **Self-Sovereign Identity**: Users control their own identity through DIDs
-7. **Efficient Data Flow**: Optimized for single-transfer content handling
+### Core Principles
 
-## Platform Architecture
+1. **Plugin-Native Design**: Everything is a plugin, enabling maximum flexibility and composability
+2. **True Fault Isolation**: Plugin failures never compromise the core framework
+3. **Network Transparency**: Identical APIs for local, remote, cloud, and edge plugin execution
+4. **Hot Loading**: Zero-downtime plugin updates with seamless state migration
+5. **Economic Sustainability**: Built-in economic models that align incentives
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Client Applications                      │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
-│  │Web Platform │    │ Mobile App  │    │ Desktop App │     │
-│  └─────────────┘    └─────────────┘    └─────────────┘     │
-├─────────────────────────────────────────────────────────────┤
-│               Client SDKs & Libraries                       │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
-│  │ JavaScript  │    │    React    │    │   Native    │     │
-│  └─────────────┘    └─────────────┘    └─────────────┘     │
-├─────────────────────────────────────────────────────────────┤
-│                  Blackhole Orchestrator                     │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │                Process Manager                       │   │
-│  ├─────────────────────────────────────────────────────┤   │
-│  │ ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐ │   │
-│  │ │Identity │  │ Storage │  │ Ledger  │  │ Social  │ │   │
-│  │ │ Process │  │ Process │  │ Process │  │ Process │ │   │
-│  │ └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘ │   │
-│  │ ┌────┴────┐  ┌────┴────┐  ┌────┴────┐  ┌────┴────┐ │   │
-│  │ │ Indexer │  │  Node   │  │Analytics│  │Telemetry│ │   │
-│  │ │ Process │  │ Process │  │ Process │  │ Process │ │   │
-│  │ └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘ │   │
-│  │ ┌────┴────┐                                       │   │
-│  │ │ Wallet  │                                       │   │
-│  │ │ Process │                                       │   │
-│  │ └────┬────┘                                       │   │
-│  │      │             │             │             │     │   │
-│  │      └─────────────┼─────────────┼─────────────┘     │   │
-│  │                    │     gRPC    │                   │   │
-│  │              ┌─────┴─────────────┴─────┐            │   │
-│  │              │    Unix Sockets / TCP   │            │   │
-│  │              └─────────────────────────┘            │   │
-│  └─────────────────────────────────────────────────────┘   │
-├─────────────────────────────────────────────────────────────┤
-│                    External Services                        │
-│  ┌─────────┐  ┌─────────┐  ┌─────────────────────┐         │
-│  │  IPFS   │  │Filecoin │  │    Root Network     │         │
-│  └─────────┘  └─────────┘  └─────────────────────┘         │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Key Components
-
-1. **Content Storage**: IPFS for content addressing and Filecoin for persistent storage
-2. **Content Ledger**: Root Network blockchain for ownership and transaction records
-3. **Content Discovery**: Indexing and search functionality for content discovery
-4. **Node Management**: Peer discovery and network topology management
-5. **Social Interactions**: Comment, follow, like, and share functionality using ActivityPub
-6. **Analytics**: Comprehensive content consumption tracking and engagement metrics
-7. **Telemetry**: System health monitoring and performance tracking
-8. **Client SDKs**: Cross-platform libraries for application development
-9. **UI Components**: Reusable React components for building interfaces
-10. **Identity System**: DID-based self-sovereign identity with verifiable credentials
-11. **Wallet Service**: Dual-mode wallet system supporting decentralized and self-managed options
-
-### Architectural Layers
-
-The platform is designed with three distinct layers that separate responsibilities and enable a decentralized ecosystem:
-
-1. **End Users (Clients)**
-   - Lightweight web/mobile applications with minimal processing
-   - Focused on content consumption and creation
-   - Authentication via DIDs
-   - Simple user interfaces for content interactions
-   - No direct P2P responsibilities
-
-2. **Service Providers (Intermediaries)**
-   - Organizations building branded experiences on the Blackhole platform
-   - Operate interfaces to the Blackhole network
-   - Manage user experience and application logic
-   - Orchestrate content uploads and retrievals
-   - Verify DID-based authentication
-   - Issue verifiable credentials
-   - Add value-added services on top of core functionality
-
-3. **Blackhole Nodes (Infrastructure)**
-   - Decentralized P2P network
-   - Handle content processing, storage, and distribution
-   - IPFS/Filecoin integration
-   - DID registry for decentralized identity
-   - Node-to-node communication protocols
-   - Content indexing and search
-   - Analytics and telemetry collection
-
-### Optimized Content Flow
-
-The platform uses a single-transfer content flow to optimize bandwidth usage:
-
-1. End user requests upload permission from service provider
-2. Service provider obtains signed upload URL from Blackhole node
-3. End user uploads content directly to Blackhole node (single transfer)
-4. Blackhole node processes content (chunking, hashing, CID generation)
-5. Blackhole node stores content on IPFS/Filecoin
-6. Service provider receives notification with content CID
-7. Content is available across the network
-
-## Project Structure
-
-The Blackhole platform uses a subprocess architecture where services run as independent OS processes orchestrated by a single binary, providing operational simplicity while maintaining true service isolation.
+### Framework vs Platform vs Application
 
 ```
-blackhole/
-├── cmd/                    # Command-line applications
-│   └── blackhole/          # Main binary
-│       ├── main.go         # Application entry point
-│       └── commands/       # CLI commands
-│
-├── internal/               # Private application code
-│   ├── core/               # Core runtime
-│   │   ├── orchestrator.go # Service orchestrator
-│   │   ├── process.go      # Process management
-│   │   └── config.go       # Configuration
-│   │
-│   ├── mesh/               # Internal service mesh
-│   │   ├── router.go       # Request routing
-│   │   ├── eventbus.go     # Event system
-│   │   └── middleware.go   # Middleware chain
-│   │
-│   ├── services/           # Service implementations
-│   │   ├── identity/       # Identity service (DIDs, registry, auth)
-│   │   ├── storage/        # Storage service (IPFS, Filecoin)
-│   │   ├── node/           # Node operations & P2P networking
-│   │   ├── ledger/         # Ledger service (Root Network)
-│   │   ├── indexer/        # Indexer service (SubQuery)
-│   │   ├── social/         # Social service (ActivityPub)
-│   │   ├── analytics/      # Analytics service
-│   │   ├── telemetry/      # Telemetry service
-│   │   └── wallet/         # Wallet service
-│   │
-│   └── plugins/            # Plugin system
-│       ├── manager.go      # Plugin manager
-│       └── builtin/        # Built-in plugins
-│
-├── pkg/                    # Public packages
-│   ├── api/                # Public API clients
-│   ├── types/              # Shared type definitions
-│   └── sdk/                # SDK for developers
-│
-├── client-libs/            # Client libraries
-│   ├── javascript/         # JavaScript/TypeScript SDK
-│   ├── react/              # React components
-│   └── mobile/             # Mobile SDKs
-│
-├── applications/           # Production-ready applications
-│   ├── web-platform/       # Main web application
-│   ├── mobile-app/         # React Native mobile app
-│   ├── desktop-app/        # Electron desktop app
-│   └── wallet-app/         # Self-managed wallet app
-│
-├── scripts/                # Build and utility scripts
-├── configs/                # Configuration files
-├── deployments/            # Deployment configurations
-├── examples/               # Example applications
-├── test/                   # Integration tests
-├── docs/                   # Documentation
-│   ├── architecture/       # Architecture documentation
-│   ├── api/                # API documentation
-│   ├── guides/             # Developer guides
-│   └── tutorials/          # Tutorials
-│
-├── go.mod                  # Go module definition
-├── go.sum                  # Go module checksums
-├── Makefile                # Build automation
-├── README.md               # Project overview
-└── CLAUDE.md               # AI assistant context
+┌─────────────────────────────────────────────────────────┐
+│ 🎯 APPLICATION LAYER                                    │
+│ User-facing apps built on the framework                │
+│ (content sharing, office suite, media streaming, etc.) │
+├─────────────────────────────────────────────────────────┤
+│ 🛠️ PLATFORM LAYER                                       │
+│ Developer tools, SDK, marketplace, documentation       │
+│ (plugin development kit, marketplace, tutorials)       │
+├─────────────────────────────────────────────────────────┤
+│ 🔌 FRAMEWORK LAYER                                      │
+│ Core domains that make everything work                 │
+│ ┌─────────────┬─────────────┬─────────────┬─────────────┐ │
+│ │   Plugin    │    Mesh     │  Resource   │  Economic   │ │
+│ │ Management  │ Networking  │ Management  │   System    │ │
+│ │   Domain    │   Domain    │   Domain    │   Domain    │ │
+│ └─────────────┴─────────────┴─────────────┴─────────────┘ │
+├─────────────────────────────────────────────────────────┤
+│ ⚙️ RUNTIME LAYER                                        │
+│ Process orchestration, lifecycle, system management    │
+│ (the foundation everything else runs on)               │
+├─────────────────────────────────────────────────────────┤
+│ 🖥️ INFRASTRUCTURE LAYER                                 │
+│ OS, network, hardware (not our responsibility)         │
+└─────────────────────────────────────────────────────────┘
 ```
 
-## Subprocess Architecture
+Blackhole Foundation is the **Framework Layer** - the foundational infrastructure that platforms and applications build upon.
 
-The Blackhole platform uses a subprocess architecture where a single binary distributes as one file but spawns services as independent OS processes. This provides deployment simplicity while maintaining true service isolation.
+## Architectural Domains
 
-### Architectural Overview
+### 1. Runtime Domain (Foundation Layer)
 
+**Location**: `core/internal/runtime/`
+
+**Purpose**: Process orchestration, lifecycle management, and system foundation
+
+**Components**:
+- **Process Orchestrator** (`orchestrator/`): Plugin process management and supervision
+- **Lifecycle Manager** (`lifecycle/`): Service startup, shutdown, and health monitoring
+- **Configuration System** (`config/`): Framework and plugin configuration management
+- **Health Monitor** (`health/`): System health tracking and diagnostics
+- **Resource Controller** (`resources/`): OS-level resource management
+
+**Key Capabilities**:
+- Subprocess spawning and lifecycle management
+- Process supervision with exponential backoff restart
+- Health monitoring and failure detection
+- Resource allocation and limits enforcement
+- Configuration loading and validation
+
+### 2. Plugin Management Domain
+
+**Location**: `core/internal/framework/plugins/`
+
+**Purpose**: Plugin discovery, loading, execution, and lifecycle management
+
+**Components**:
+- **Plugin Registry** (`registry/`): Plugin discovery and metadata management
+- **Plugin Loader** (`loader/`): Plugin loading from various sources (local, remote, marketplace)
+- **Plugin Executor** (`executor/`): Plugin runtime environment and execution
+- **Plugin Lifecycle** (`lifecycle/`): Plugin state management and transitions
+- **Plugin State** (`state/`): Plugin state persistence and migration
+
+**Key Capabilities**:
+- Hot loading/unloading of plugins without framework downtime
+- Plugin discovery from local directories, remote registries, and marketplaces
+- Language-agnostic plugin support through gRPC interfaces
+- Plugin state migration during updates
+- Fault isolation through process-level sandboxing
+
+### 3. Mesh Networking Domain
+
+**Location**: `core/internal/framework/mesh/`
+
+**Purpose**: Communication, discovery, and coordination across network topologies
+
+**Components**:
+- **Service Discovery** (`discovery/`): Service registration and discovery
+- **Request Routing** (`routing/`): Intelligent request routing and load balancing
+- **Network Transport** (`transport/`): Multi-protocol network communication
+- **Mesh Topology** (`topology/`): Network topology management and optimization
+- **Security Layer** (`security/`): Encryption, authentication, and authorization
+
+**Key Capabilities**:
+- Network-transparent communication (local, remote, P2P, cloud, edge)
+- Automatic service discovery and registration
+- Intelligent load balancing and failover
+- Multi-protocol support (gRPC, HTTP, WebSocket, P2P)
+- End-to-end encryption and zero-trust security
+
+### 4. Resource Management Domain
+
+**Location**: `core/internal/framework/resources/`
+
+**Purpose**: Distributed resource allocation, scheduling, and optimization
+
+**Components**:
+- **Resource Inventory** (`inventory/`): Available resource discovery and tracking
+- **Distributed Scheduler** (`scheduler/`): Intelligent plugin placement and scaling
+- **Resource Monitor** (`monitor/`): Real-time resource usage monitoring
+- **Performance Optimizer** (`optimizer/`): Automatic performance tuning
+- **Capacity Planner** (`planner/`): Predictive resource planning
+
+**Key Capabilities**:
+- Intelligent scheduling across distributed resources
+- Real-time resource monitoring and alerting
+- Automatic performance optimization
+- Cost-aware resource allocation
+- Predictive capacity planning
+
+### 5. Economics Domain
+
+**Location**: `core/internal/framework/economics/`
+
+**Purpose**: Usage measurement, billing, and revenue distribution
+
+**Components**:
+- **Usage Metering** (`metering/`): Resource usage measurement and tracking
+- **Payment Processing** (`payments/`): Transaction processing and billing
+- **Revenue Distribution** (`distribution/`): Fair revenue sharing among contributors
+- **Pricing Engine** (`pricing/`): Dynamic pricing and cost optimization
+- **Analytics Engine** (`analytics/`): Economic analytics and insights
+
+**Key Capabilities**:
+- Accurate usage measurement and billing
+- Fair revenue distribution to plugin developers and infrastructure providers
+- Dynamic pricing based on supply and demand
+- Economic incentive alignment
+- Transparent cost tracking and optimization
+
+### 6. Ecosystem Domain
+
+**Note**: The Ecosystem Domain spans both code and community elements:
+- **Developer Tools** (code): `core/pkg/sdk/`, `core/pkg/tools/`, `core/pkg/templates/`
+- **Community & Business** (non-code): `ecosystem/`
+
+**Purpose**: Developer experience, community building, and ecosystem growth
+
+**Components**:
+- **Framework SDK** (`core/pkg/sdk/`): Multi-language development kits
+- **Development Tools** (`core/pkg/tools/`): CLI tools, debuggers, and development utilities
+- **Template System** (`core/pkg/templates/`): Plugin and application templates
+- **Documentation** (`ecosystem/docs/`): Framework and API documentation
+- **Plugin Marketplace** (`ecosystem/marketplace/`): Plugin discovery, distribution, and monetization
+- **Community** (`ecosystem/community/`): Forums, support, and collaboration
+- **Partner Network** (`ecosystem/partners/`): Service providers and integrators
+- **Education** (`ecosystem/training/`, `ecosystem/certification/`): Learning resources
+- **Governance** (`ecosystem/governance/`): Foundation governance and policies
+- **Enterprise** (`ecosystem/enterprise/`): Enterprise solutions and support
+
+**Key Capabilities**:
+- Comprehensive developer experience
+- Vibrant community ecosystem
+- Plugin marketplace with monetization
+- Professional services and support
+- Education and certification programs
+- Sustainable governance model
+
+## Framework Architecture
+
+### Core Framework Runtime
+
+```go
+type BlackholeFramework struct {
+    // Runtime foundation
+    runtime         *RuntimeManager
+    orchestrator    *ProcessOrchestrator
+    config          *ConfigurationManager
+    
+    // Core domains
+    plugins         *PluginManager
+    mesh            *MeshCoordinator
+    resources       *ResourceManager
+    economics       *EconomicsEngine
+    
+    // System coordination
+    coordinator     *SystemCoordinator
+    healthMonitor   *HealthMonitor
+    metricsCollector *MetricsCollector
+}
 ```
-blackhole (orchestrator binary)
-├── Process Manager            # Subprocess lifecycle management
-├── Service Processes          # Independent OS processes
-│   ├── Identity Process       # DIDs, registry, auth
-│   ├── Storage Process        # IPFS, Filecoin
-│   ├── Node Process           # Node operations & P2P networking
-│   ├── Ledger Process         # Blockchain integration
-│   ├── Indexer Process        # Content indexing
-│   ├── Social Process         # ActivityPub
-│   ├── Analytics Process      # Metrics collection
-│   ├── Telemetry Process      # System monitoring
-│   └── Wallet Process         # Wallet management
-├── RPC Communication          # gRPC-based IPC
-│   ├── Unix Sockets (local)   # High-performance local communication
-│   └── TCP + TLS (remote)     # Secure remote communication
-└── Resource Control           # OS-level resource management
-    ├── CPU Quotas             # Process-specific CPU limits
-    ├── Memory Limits          # Process-level memory control
-    └── I/O Prioritization     # I/O resource allocation
+
+### Plugin Interface Specification
+
+All plugins implement the standard framework interface:
+
+```go
+type FrameworkPlugin interface {
+    // Plugin metadata
+    GetMetadata() *PluginMetadata
+    GetCapabilities() []PluginCapability
+    GetDependencies() []PluginDependency
+
+    // Lifecycle management
+    Initialize(ctx context.Context, config *PluginConfig) error
+    Start(ctx context.Context) error
+    Stop(ctx context.Context) error
+    Shutdown(ctx context.Context) error
+
+    // Health and monitoring
+    HealthCheck() *HealthStatus
+    GetMetrics() *PluginMetrics
+
+    // Communication
+    HandleRequest(ctx context.Context, request *PluginRequest) (*PluginResponse, error)
+    SendEvent(ctx context.Context, event *PluginEvent) error
+
+    // Hot loading support
+    PrepareShutdown() error
+    ExportState() ([]byte, error)
+    ImportState(state []byte) error
+}
 ```
 
-### Key Benefits
-- **Operational Simplicity**: Single binary to distribute and deploy
-- **True Isolation**: Process crashes don't affect other services
-- **Resource Control**: OS-level CPU, memory, and I/O limits
-- **Independent Updates**: Restart individual services without downtime
-- **Better Debugging**: Process-level profiling and monitoring
-- **Future Flexibility**: Easy migration path to microservices
-- **Security**: Process-level security boundaries
+### Network Topology Support
 
-### Service Communication
-All inter-service communication uses gRPC:
-- **Local Communication**: Unix domain sockets for minimal overhead
-- **Remote Communication**: TCP with mTLS for security
-- **Service Discovery**: Automatic service registration and discovery
-- **Connection Pooling**: Efficient connection reuse
-- **Health Checking**: Built-in health monitoring
+The framework supports multiple deployment topologies:
 
-### Resource Management
-Each service runs with specific resource allocations:
+#### 1. Local Development Topology
 ```yaml
-identity:
-  cpu: 200%      # 2 CPU cores
-  memory: 1GB    # Memory limit
-  io_weight: 500 # Medium I/O priority
-
-storage:
-  cpu: 100%      # 1 CPU core
-  memory: 2GB    # Higher memory for caching
-  io_weight: 900 # High I/O priority
-
-ledger:
-  cpu: 150%      # 1.5 CPU cores
-  memory: 1GB    # Memory limit
-  network: 100Mbps # High network usage
+topology: local
+runtime:
+  orchestrator: local
+  plugins: subprocess
+mesh:
+  type: local
+  transport: unix_sockets
 ```
 
-### Process Supervision
-- **Automatic Restart**: Failed services are automatically restarted
-- **Exponential Backoff**: Prevents rapid restart loops
-- **Health Monitoring**: Regular health checks for each process
-- **Graceful Shutdown**: Coordinated shutdown procedures
-- **State Persistence**: Services maintain state across restarts
-
-### Client Libraries
-
-Separate client libraries are provided for different platforms:
-
-```
-client-libs/
-├── javascript/               # JavaScript/TypeScript SDK
-│   ├── src/
-│   │   ├── identity.ts      # Identity operations
-│   │   ├── storage.ts       # Storage operations
-│   │   ├── social.ts        # Social interactions
-│   │   └── client.ts        # Main client interface
-│   └── dist/                # Compiled output
-│
-├── react/                   # React component library
-│   ├── components/          # UI components
-│   ├── hooks/               # React hooks
-│   └── providers/           # Context providers
-│
-└── mobile/                  # Mobile SDKs
-    ├── ios/                 # iOS SDK
-    └── android/             # Android SDK
+#### 2. Enterprise Storage Grid
+```yaml
+topology: enterprise
+coordinator:
+  role: main
+  plugins: [mesh-coordinator, storage-manager, auth-service]
+storage_nodes:
+  - location: datacenter_1
+    plugins: [storage-node, mesh-client]
+  - location: datacenter_2  
+    plugins: [storage-node, mesh-client]
+mesh:
+  type: enterprise
+  transport: tcp_tls
 ```
 
-These client libraries communicate with the Blackhole binary through standard APIs (REST, gRPC, WebSocket).
-
-### Key Domain Functionality
-
-#### Identity System
-
-The identity system is implemented as a service subprocess with complete DID functionality:
-
-```
-internal/services/identity/               # Identity service implementation
-├── main.go                              # Service entry point
-├── service.go                           # Service implementation
-├── did/                                 # DID operations
-│   ├── creation.go                      # DID creation logic
-│   ├── resolution.go                    # DID resolution logic
-│   └── verification.go                  # DID verification logic
-├── registry/                            # DID registry
-├── credentials/                         # Credential services
-└── authentication/                      # Authentication service
-
-pkg/api/identity/                        # Identity API clients
-├── client.go                            # gRPC client implementation
-├── types.go                            # Shared types
-└── identity.proto                       # Protocol buffer definitions
+#### 3. P2P Network Topology
+```yaml
+topology: p2p
+plugins:
+  - p2p-networking
+  - content-sharing
+  - social-features
+  - distributed-storage
+mesh:
+  type: p2p
+  transport: libp2p
+  protocols: [dht, gossip, relay]
 ```
 
-This structure provides a complete self-sovereign identity solution with:
-- DID creation and management
-- Verifiable credential verification
-- DID-based authentication
-- Service provider integration with DIDs
-
-#### Wallet System
-
-The wallet system implements both decentralized and self-managed wallet options:
-
-```
-internal/services/wallet/                 # Wallet service implementation
-├── main.go                              # Service entry point
-├── service.go                           # Service implementation  
-├── storage.go                           # Encrypted storage service
-├── api.go                               # Wallet API endpoints
-└── sync.go                              # Synchronization service
-
-pkg/api/wallet/                          # Wallet API clients
-├── client.go                            # gRPC client implementation
-├── types.go                             # Shared types
-└── wallet.proto                         # Protocol buffer definitions
-
-applications/wallet-app/                 # User-facing wallet application
-├── web/                                 # Web implementation
-├── mobile/                              # Mobile implementation
-└── desktop/                             # Desktop implementation
+#### 4. Hybrid Cloud Topology
+```yaml
+topology: hybrid
+on_premise:
+  plugins: [identity, content, local-storage]
+  mesh: enterprise
+cloud:
+  plugins: [ai-processing, analytics, backup]
+  mesh: cloud_native
+edge:
+  plugins: [content-delivery, caching]
+  mesh: edge_optimized
 ```
 
-#### Content Storage
+## Development Roadmap
 
-Decentralized content storage through IPFS and Filecoin:
+### Phase 1: Framework Foundation (Current - Q2)
 
-```
-internal/services/storage/                # Storage service implementation
-├── main.go                              # Service entry point
-├── service.go                           # Service implementation
-├── ipfs/                                # IPFS integration
-├── filecoin/                            # Filecoin integration
-└── content/                             # Content management
+**Runtime Domain Implementation**:
+- ✅ Enhanced Process Orchestrator (current implementation)
+- 🔄 Configuration System with hot-reload capabilities
+- 🔄 Health Monitoring and diagnostics
+- 🔄 Resource Management integration
 
-pkg/api/storage/                         # Storage API clients
-├── client.go                            # gRPC client implementation
-├── types.go                             # Shared types
-└── storage.proto                        # Protocol buffer definitions
-```
+**Plugin Domain Foundation**:
+- 🔄 Plugin Registry and discovery system
+- 🔄 Hot loading mechanism with state migration
+- 🔄 Plugin isolation and sandboxing
+- 🔄 Language-agnostic plugin support
 
-#### Social Interactions
+**Mesh Domain Basics**:
+- 🔄 Local mesh communication (extend current mesh)
+- 🔄 Service discovery and registration
+- 🔄 Basic load balancing and failover
+- 🔄 Security framework foundation
 
-ActivityPub-based social networking capabilities:
+### Phase 2: Distributed Capabilities (Q3-Q4)
 
-```
-internal/services/social/                 # Social service implementation
-├── main.go                              # Service entry point
-├── service.go                           # Service implementation
-├── activitypub/                         # ActivityPub implementation
-└── federation/                          # Federation protocols
+**Remote Plugin System**:
+- 🆕 Remote plugin runtime and execution
+- 🆕 Cross-network mesh coordination
+- 🆕 Distributed state management
+- 🆕 Global discovery service
 
-pkg/api/social/                          # Social API clients
-├── client.go                            # gRPC client implementation
-├── types.go                             # Shared types
-└── social.proto                         # Protocol buffer definitions
-```
+**Resource Management**:
+- 🆕 Distributed scheduler implementation
+- 🆕 Resource optimization algorithms
+- 🆕 Capacity planning system
+- 🆕 Cost optimization engine
 
-#### Analytics and Telemetry
+**Economics Foundation**:
+- 🆕 Usage metering and tracking
+- 🆕 Basic payment processing
+- 🆕 Revenue distribution mechanisms
+- 🆕 Economic incentive alignment
 
-Privacy-preserving metrics collection:
+### Phase 3: Developer Ecosystem (Year 2)
 
-```
-internal/services/analytics/              # Analytics service implementation
-├── main.go                              # Service entry point
-├── service.go                           # Service implementation
-└── collection/                          # Data collection systems
+**Platform Domain**:
+- 🆕 Comprehensive multi-language SDK
+- 🆕 Framework CLI tools and utilities
+- 🆕 Plugin marketplace infrastructure
+- 🆕 Development templates and scaffolding
 
-internal/services/telemetry/              # Telemetry service implementation
-├── main.go                              # Service entry point
-├── service.go                           # Service implementation
-└── monitoring/                          # System monitoring
+**Documentation and Community**:
+- 🆕 Auto-generated API documentation
+- 🆕 Interactive tutorials and guides
+- 🆕 Community forums and support
+- 🆕 Developer certification program
 
-pkg/api/analytics/                       # Analytics API clients
-├── client.go                            # gRPC client implementation
-├── types.go                             # Shared types
-└── analytics.proto                      # Protocol buffer definitions
-```
+### Phase 4: Enterprise Features (Year 2-3)
 
-## Applications
+**Enterprise Security**:
+- 🆕 Zero-trust architecture implementation
+- 🆕 Automated compliance verification
+- 🆕 Fine-grained access controls
+- 🆕 Audit logging and reporting
 
-### Web Platform
-The main web application showcasing the platform's capabilities.
-- Content discovery and browsing
-- Creator dashboard
-- User profiles and social interactions
-- Media consumption
-- Administrative tools
-
-### Mobile App
-React Native mobile application for iOS and Android.
-- Mobile-optimized content browsing
-- Native media playback
-- Push notifications
-- Camera integration
-- Offline capabilities
-
-### Desktop App
-Electron desktop application for enhanced functionality.
-- Enhanced local caching
-- System tray integration
-- File system integration
-- Background processing
-- Advanced content tools
+**Advanced Operations**:
+- 🆕 Multi-tenant architecture
+- 🆕 Advanced monitoring and analytics
+- 🆕 Incident response automation
+- 🆕 Professional support infrastructure
 
 ## Implementation Strategy
 
-The implementation follows a phased approach based on our single binary architecture design.
+### Development Approach
 
-### Phase 1: Foundation (Weeks 1-2)
-- Set up Go project structure
-- Implement process orchestrator
-- Develop subprocess lifecycle manager
-- Create internal service mesh with gRPC
-- Build configuration system (Viper)
-- Establish logging and metrics foundation
+1. **Foundation First**: Build robust runtime and plugin foundations
+2. **Domain Isolation**: Develop each domain independently with clear interfaces
+3. **Progressive Enhancement**: Start simple, add complexity incrementally
+4. **Test-Driven**: Comprehensive testing at every layer
+5. **Documentation-Driven**: Document interfaces before implementation
 
-### Phase 2: Service Implementation (Weeks 3-5)
-- Implement Identity Service subprocess (foundational)
-- Add Storage Service subprocess with IPFS/Filecoin
-- Create Node Service subprocess for P2P networking
-- Build Ledger Service subprocess for Root Network
-- Add Wallet Service subprocess with dual-mode support
-- Add Indexer Service subprocess
-- Implement Social Service subprocess with ActivityPub
-- Create Analytics Service subprocess
-- Add Telemetry Service subprocess
+### Code Organization
 
-### Phase 3: Resource Management (Weeks 6-7)
-- Implement memory pools per service
-- Add CPU quota enforcement
-- Create resource monitoring
-- Implement circuit breakers
-- Add health check system
-- Build recovery mechanisms
+```
+core/
+├── internal/
+│   ├── runtime/                # Runtime Domain
+│   │   ├── orchestrator/       # Process management (✅ implemented)
+│   │   ├── lifecycle/          # Service lifecycle
+│   │   ├── config/             # Configuration management
+│   │   ├── health/             # Health monitoring
+│   │   ├── dashboard/          # Runtime monitoring dashboard (✅ implemented)
+│   │   └── interfaces.go       # Runtime domain interfaces
+│   ├── framework/              # Framework Domains
+│   │   ├── plugins/            # Plugin Management Domain
+│   │   │   ├── registry/       # Plugin discovery
+│   │   │   ├── loader/         # Plugin loading
+│   │   │   ├── executor/       # Plugin execution
+│   │   │   ├── lifecycle/      # Plugin lifecycle
+│   │   │   ├── state/          # State management
+│   │   │   └── interfaces.go   # Plugin domain interfaces
+│   │   ├── mesh/               # Mesh Networking Domain
+│   │   │   ├── discovery/      # Service discovery
+│   │   │   ├── routing/        # Request routing (🔄 partially implemented)
+│   │   │   ├── transport/      # Network transport
+│   │   │   ├── topology/       # Topology management
+│   │   │   ├── security/       # Security layer
+│   │   │   └── interfaces.go   # Mesh domain interfaces
+│   │   ├── resources/          # Resource Management Domain
+│   │   │   ├── inventory/      # Resource discovery
+│   │   │   ├── scheduler/      # Resource scheduling
+│   │   │   ├── monitor/        # Resource monitoring
+│   │   │   ├── optimizer/      # Performance optimization
+│   │   │   ├── planner/        # Capacity planning
+│   │   │   └── interfaces.go   # Resource domain interfaces
+│   │   └── economics/          # Economics Domain
+│   │       ├── metering/       # Usage metering
+│   │       ├── payments/       # Payment processing
+│   │       ├── distribution/   # Revenue distribution
+│   │       ├── pricing/        # Pricing engine
+│   │       ├── analytics/      # Economic analytics
+│   │       └── interfaces.go   # Economics domain interfaces
+│   └── services/               # Service implementations
+│       ├── identity/           # Identity service
+│       ├── node/               # Node service
+│       └── ...                 # Other services
+├── pkg/                        # Public packages
+│   ├── api/                    # Public APIs
+│   ├── sdk/                    # Framework SDK
+│   ├── tools/                  # Developer tools
+│   ├── templates/              # Project templates
+│   └── types/                  # Shared types
+└── test/                       # All tests
 
-### Phase 4: Plugin System (Weeks 8-9)
-- Create plugin interfaces
-- Implement plugin registry
-- Build hook system for extensibility
-- Add compiled-in plugins
-- Create plugin lifecycle management
-- Implement security sandboxing
+ecosystem/                      # Ecosystem Domain (non-code)
+├── docs/                       # Documentation
+├── marketplace/                # Plugin marketplace
+├── community/                  # Community programs
+├── partners/                   # Partner network
+├── governance/                 # Foundation governance
+└── enterprise/                 # Enterprise solutions
+```
 
-### Phase 5: Deployment & Operations (Weeks 10-11)
-- Create deployment packages
-- Build CLI management interface
-- Add configuration validation
-- Implement performance profiling
-- Create diagnostic utilities
-- Write operational documentation
+### Technology Stack
 
-### Phase 6: Client Libraries (Weeks 12-13)
-- Develop JavaScript/TypeScript SDK
-- Create React component library
-- Build mobile SDKs (iOS/Android)
-- Implement example applications
-- Write developer documentation
-- Create integration tests
+**Core Framework**:
+- **Go**: Primary language for framework implementation
+- **gRPC**: Plugin communication and internal APIs
+- **Protocol Buffers**: Interface definitions and serialization
+- **libp2p**: P2P networking for mesh topologies
 
-## Analytics & Privacy Considerations
+**Plugin Ecosystem**:
+- **Multi-language support**: Go, JavaScript/TypeScript, Python, Rust, Java
+- **Container support**: Docker for plugin isolation
+- **WebAssembly**: Lightweight plugin execution
 
-Our analytics and telemetry systems are designed with privacy as a core principle, following these guidelines:
+**Infrastructure**:
+- **Database**: Embedded (BadgerDB) and distributed (PostgreSQL, MongoDB)
+- **Caching**: Redis for distributed caching
+- **Monitoring**: Prometheus metrics, OpenTelemetry tracing
+- **Security**: TLS/mTLS, OAuth2/OIDC, JWT tokens
 
-### Privacy-First Design
+### Testing Strategy
 
-1. **Consent Management**
-   - Clear opt-in/opt-out mechanisms for different levels of analytics
-   - Granular controls for users to manage what data is collected
-   - Transparent explanations of how data is used
-   - Local storage options for analytics data
+**Unit Tests**:
+- Comprehensive unit test coverage for all domains
+- Mock implementations for external dependencies
+- Property-based testing for core algorithms
 
-2. **Data Minimization**
-   - Collection of only necessary data points
-   - Automatic data aggregation where possible
-   - Limited retention periods
-   - Regular data purging schedules
+**Integration Tests**:
+- End-to-end plugin loading and execution
+- Multi-node mesh communication
+- Resource allocation and scheduling
+- Economic transaction flows
 
-3. **Anonymization & Pseudonymization**
-   - Client-side anonymization before data transmission
-   - Differential privacy techniques for aggregate reports
-   - Data segmentation to prevent correlation
-   - Pseudonymous identifiers instead of personal information
+**Performance Tests**:
+- Plugin startup and hot-reload benchmarks
+- Network communication latency and throughput
+- Resource utilization efficiency
+- Scalability limits and bottlenecks
 
-4. **Federated Analytics Architecture**
-   - Local-first processing of sensitive metrics
-   - Node-level storage and aggregation
-   - Optional federation of anonymized aggregate data
-   - Distributed storage matching our decentralized architecture
+**Security Tests**:
+- Plugin isolation verification
+- Network security validation
+- Access control enforcement
+- Vulnerability scanning
 
-5. **Transparency & Control**
-   - Open analytics dashboards for users to see their own data
-   - Data export capabilities
-   - One-click data deletion
-   - Clear documentation on collection practices
+## Reference Applications
 
-### Implementation Approach
+### 1. Distributed File Storage
+**Purpose**: Demonstrate storage grid topology
+**Plugins**: storage-node, replication-manager, access-controller
+**Topology**: Enterprise storage grid
 
-- Event-based analytics collection with privacy filters
-- Blockchain verification for critical metrics where appropriate
-- Secure storage with encryption at rest
-- Strong access controls for analytics dashboards
-- Regular privacy audits and impact assessments
+### 2. P2P Media Streaming
+**Purpose**: Demonstrate P2P networking capabilities
+**Plugins**: p2p-networking, content-delivery, social-features
+**Topology**: P2P network
 
-## Technology Choices
+### 3. AI Processing Cluster
+**Purpose**: Demonstrate resource management and scheduling
+**Plugins**: ai-runtime, model-registry, resource-scheduler
+**Topology**: Hybrid cloud
 
-Our technology stack is optimized for the single binary architecture with Go as the primary language.
+### 4. Enterprise Office Suite
+**Purpose**: Demonstrate real-time collaboration
+**Plugins**: collaboration-engine, document-processor, sync-manager
+**Topology**: Enterprise private cloud
 
-### Core Platform (Single Binary)
-- **Go**: Primary language for the single binary implementation
-- **Go Modules**: Dependency management
-- **gRPC**: Internal service communication
-- **Protocol Buffers**: Service interface definitions
-- **IPFS Go SDK**: Content addressing and distribution
-- **Filecoin Go SDK**: Persistent storage integration
-- **libp2p**: P2P networking stack
-- **BoltDB/BadgerDB**: Embedded database for local state
-- **Prometheus**: Metrics collection
-- **OpenTelemetry**: Distributed tracing
+## Framework APIs
 
-### External Integrations
-- **Root Network SDK**: Blockchain integration for content ledger
-- **ActivityPub**: Social federation protocol
-- **DIDs**: Decentralized identity standard
-- **Verifiable Credentials**: Identity attestations
-- **Ed25519/secp256k1**: Cryptographic algorithms
+### Developer-Facing APIs
 
-### Client Libraries
-- **TypeScript**: Primary language for JavaScript SDK
-- **React**: Component library framework
-- **React Native**: Mobile SDK framework
-- **Swift**: iOS SDK implementation
-- **Kotlin**: Android SDK implementation
-- **gRPC-Web**: Browser-based API communication
-- **WebSockets**: Real-time client connections
+```go
+// Plugin Developer API
+type PluginDeveloperAPI interface {
+    CreatePlugin(metadata *PluginMetadata) *PluginProject
+    BuildPlugin(project *PluginProject, targets []BuildTarget) error
+    TestPlugin(project *PluginProject) *TestResults
+    PublishPlugin(package *PluginPackage) error
+}
 
-### Applications
-- **React**: Web application framework
-- **React Native**: Mobile application framework
-- **Electron**: Desktop application framework
-- **Tailwind CSS**: Styling system
-- **Next.js**: Web application optimization
+// Application Developer API
+type ApplicationDeveloperAPI interface {
+    CreateApplication(template *ApplicationTemplate) *Application
+    AddPlugin(app *Application, requirement *PluginRequirement) error
+    DeployApplication(app *Application, topology *NetworkTopology) error
+    ScaleApplication(app *Application, scaling *ScalingPolicy) error
+}
 
-### Development Infrastructure
+// System Operations API
+type SystemOperationsAPI interface {
+    MonitorSystem(metrics *MetricsConfig) *SystemMonitor
+    ManageResources(policy *ResourcePolicy) *ResourceManager
+    BackupSystem(strategy *BackupStrategy) *BackupManager
+    UpdateFramework(version *FrameworkVersion) *UpdateManager
+}
+```
 
-For managing a Go single binary with multiple subprocess services, we use a combination of Go-native tools and established practices:
-
-#### Monorepo Management
-- **Go Modules**: Native dependency management with workspace support
-  ```go
-  // go.work (Go 1.21+)
-  go 1.22
-
-  use (
-      .
-      ./cmd/blackhole
-      ./internal/services/identity
-      ./internal/services/storage
-      ./internal/services/node
-      ./internal/services/ledger
-      ./internal/services/indexer
-      ./internal/services/social
-      ./internal/services/analytics
-      ./internal/services/telemetry
-      ./internal/services/wallet
-      ./pkg/api
-      ./pkg/sdk
-  )
-  ```
-- **Module Structure**: Each service can be its own module for clear dependency boundaries
-- **Shared Dependencies**: Common code in `pkg/` directory
-- **Local Development**: `go.work` files for local multi-module development
-
-#### Build Automation
-- **Make**: Coordinated builds across all services
-  ```makefile
-  # Build main binary
-  build:
-      go build -o bin/blackhole ./cmd/blackhole
-
-  # Build all services
-  all: identity storage node ledger indexer social analytics telemetry wallet
-
-  # Individual service builds
-  identity:
-      go build -o bin/identity ./internal/services/identity
-
-  # Run all tests
-  test:
-      go test ./...
-
-  # Cross-compilation
-  build-all:
-      GOOS=linux GOARCH=amd64 make build
-      GOOS=darwin GOARCH=amd64 make build
-      GOOS=windows GOARCH=amd64 make build
-  ```
-- **go generate**: Code generation for protobuf, mocks, etc.
-- **GoReleaser**: Automated releases with cross-compilation
-
-#### Service Development
-- **protoc**: Protocol buffer compilation for gRPC services
-- **mockgen**: Generate mocks for testing
-- **wire**: Dependency injection code generation
-
-#### Quality & Testing
-- **golangci-lint**: Comprehensive linting across all modules
-- **go test**: Unit and integration testing
-  ```bash
-  # Test all modules
-  go test ./...
-  
-  # Test with race detection
-  go test -race ./...
-  
-  # Coverage across modules
-  go test -coverprofile=coverage.out ./...
-  ```
-- **go bench**: Performance benchmarking
-- **go vet**: Static analysis
-
-#### CI/CD Infrastructure
-- **GitHub Actions**: Automated testing and deployment
-  ```yaml
-  # Test matrix for all services
-  strategy:
-    matrix:
-      service: [identity, storage, node, ledger, indexer, social, analytics, telemetry, wallet]
-  ```
-- **Docker**: Multi-stage builds for each service
-- **Container Registry**: Service-specific image management
-
-#### Development Tools
-- **air**: Hot reload for Go services during development
-- **delve**: Go debugger for service debugging
-- **pprof**: Performance profiling for each service
-- **go mod tidy**: Dependency management per service
-- **go work sync**: Synchronize workspace dependencies
-
-## Licensing & Governance
-
-### Licensing
-- **Core & Protocol**: Apache 2.0
-- **Client Libraries**: MIT
-- **Examples**: MIT
-
-### Governance
-- **Decision Making**: RFC process
-- **Contribution Process**: Pull request workflow
-- **Community Building**: Discord, forums, hackathons
-- **Sustainability**: Optional hosted services, support contracts
-
-## Next Steps
-
-Following our single binary architecture design:
-
-1. Set up Go project structure with modules
-2. Implement subprocess orchestrator in `internal/core`
-3. Create RPC communication layer in `internal/rpc`
-4. Build process manager and service registry
-5. Implement first service (Identity) as subprocess
-6. Add remaining services as independent processes
-7. Create gRPC API definitions for all services
-8. Develop JavaScript/TypeScript client SDK
-9. Build example applications
-10. Write comprehensive documentation
-
-## Deployment and Operations
-
-### Starting Services
-
-The Blackhole binary provides commands to manage service processes:
+### CLI Interface
 
 ```bash
-# Start all services
-blackhole start --all
+# Framework management
+blackhole init --topology local
+blackhole start --config production.yaml
+blackhole status --detailed
+blackhole health --check-all
 
-# Start specific services
-blackhole start --services=identity,storage,ledger
+# Plugin management
+blackhole plugin create --name my-plugin --type service
+blackhole plugin build --target local,remote,cloud
+blackhole plugin load my-plugin
+blackhole plugin reload my-plugin --version 2.0.0
+blackhole plugin unload my-plugin
 
-# Start with custom resource limits
-blackhole start --services=storage --cpu=200 --memory=4096
+# Application development
+blackhole app create --name my-app --template storage-grid
+blackhole app deploy --topology enterprise
+blackhole app scale --instances 10
 
-# Start with development configuration
-blackhole start --config=dev.yaml
+# System operations
+blackhole system monitor --dashboard
+blackhole system backup --strategy incremental
+blackhole system update --version 2.0.0
 ```
 
-### Service Management
+## Security Model
 
-```bash
-# View service status
-blackhole status
+### Multi-Layer Security
 
-# Restart a crashed service
-blackhole restart identity
+1. **Plugin Isolation**: Process-level sandboxing
+2. **Network Security**: End-to-end encryption
+3. **Access Control**: Fine-grained permissions
+4. **Audit Logging**: Complete activity tracking
+5. **Compliance**: Automated regulatory compliance
 
-# Stop a specific service
-blackhole stop storage
+### Zero-Trust Architecture
 
-# View service logs
-blackhole logs identity --follow
+- Every request is verified
+- No implicit trust relationships
+- Continuous security monitoring
+- Automatic threat response
 
-# Check service health
-blackhole health ledger
-```
+## Economic Model
 
-### Monitoring and Debugging
+### Framework Sustainability
 
-Since services run as separate processes, standard tools can be used:
+**Revenue Sources**:
+- Enterprise feature licensing
+- Professional support services
+- Marketplace transaction fees
+- Custom development services
 
-```bash
-# Monitor process resources
-htop -p $(blackhole pid identity)
+**Community Benefits**:
+- Open-source core framework
+- Free community support
+- Public plugin marketplace
+- Educational resources
 
-# Profile a service
-blackhole profile storage --cpu --duration=30s
+## Getting Started
 
-# Trace RPC calls
-blackhole trace --service=ledger --method=Transfer
+### For Plugin Developers
 
-# Export metrics
-blackhole metrics --format=prometheus
-```
-
-### Configuration
-
-Services are configured through YAML files:
-
-```yaml
-# blackhole.yaml
-orchestrator:
-  socket_dir: /var/run/blackhole
-  log_level: info
-  
-services:
-  identity:
-    enabled: true
-    resources:
-      cpu: 200
-      memory: 1024
-      io_weight: 500
-    config:
-      database: postgres://identity:pass@localhost/identity
-      cache_size: 100MB
-      
-  storage:
-    enabled: true
-    resources:
-      cpu: 100
-      memory: 2048
-      io_weight: 900
-    config:
-      ipfs_api: http://localhost:5001
-      filecoin_api: http://localhost:1234
-      chunk_size: 1MB
-```
-
-### Production Deployment
-
-For production environments, the subprocess architecture provides several deployment options:
-
-1. **Single Host**: All services on one machine
+1. **Install Framework SDK**:
    ```bash
-   blackhole start --all --config=production.yaml
+   curl -sSL https://get.blackhole.dev/sdk | sh
    ```
 
-2. **Distributed**: Services across multiple hosts
+2. **Create First Plugin**:
    ```bash
-   # Host 1: Core services
-   blackhole start --services=identity,ledger --bind=0.0.0.0:9000
-   
-   # Host 2: Storage services
-   blackhole start --services=storage,indexer --connect=host1:9000
+   blackhole plugin create hello-world --template service
+   cd hello-world
+   blackhole plugin build
+   blackhole plugin test
    ```
 
-3. **Kubernetes**: Container orchestration
-   ```yaml
-   apiVersion: apps/v1
-   kind: Deployment
-   metadata:
-     name: blackhole
-   spec:
-     containers:
-     - name: blackhole
-       image: blackhole:latest
-       command: ["blackhole", "start", "--all"]
-       securityContext:
-         capabilities:
-           add: ["SYS_RESOURCE"]
+3. **Publish to Marketplace**:
+   ```bash
+   blackhole plugin publish --registry community
    ```
 
-The subprocess architecture ensures that regardless of deployment method, services remain isolated and manageable while benefiting from the simplicity of a single binary distribution.
+### For Application Developers
+
+1. **Install Framework**:
+   ```bash
+   curl -sSL https://get.blackhole.dev | sh
+   blackhole init --topology local
+   ```
+
+2. **Create Application**:
+   ```bash
+   blackhole app create my-app --template distributed-storage
+   blackhole app add-plugin storage-node --version ">=1.0.0"
+   blackhole app deploy --topology local
+   ```
+
+### For System Operators
+
+1. **Production Deployment**:
+   ```bash
+   blackhole deploy --topology enterprise --config production.yaml
+   blackhole system monitor --enable-alerts
+   ```
+
+2. **Monitoring and Management**:
+   ```bash
+   blackhole system status --cluster
+   blackhole system backup --automated
+   blackhole system scale --policy auto
+   ```
+
+## Community and Ecosystem
+
+### Open Source Community
+
+- **GitHub Repository**: Core framework development
+- **Community Forums**: Developer discussions and support
+- **Plugin Registry**: Community plugin sharing
+- **Documentation Wiki**: Collaborative documentation
+
+### Enterprise Ecosystem
+
+- **Professional Support**: SLA-backed support services
+- **Enterprise Marketplace**: Certified plugins and solutions
+- **Training and Certification**: Developer education programs
+- **Custom Development**: Tailored solutions and consulting
+
+## Conclusion
+
+Blackhole Foundation represents a fundamental shift in distributed computing architecture. By providing a plugin-native framework with true fault isolation, hot loading capabilities, and network transparency, we enable developers to build distributed applications that are more reliable, flexible, and economically sustainable than ever before.
+
+The framework's multi-domain architecture ensures clean separation of concerns while maintaining seamless integration. From local development to global enterprise deployments, Blackhole Foundation provides the foundational infrastructure for the next generation of distributed computing platforms and applications.
 
 ---
 
-*This document serves as the primary reference for the Blackhole platform architecture and will be updated as the project evolves.*
+*This document serves as the authoritative architectural specification for Blackhole Foundation. It will be updated as the framework evolves and new capabilities are added.*

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugin Management - Blackhole Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="plugin-styles.css">
+</head>
+<body>
+    <div class="dashboard">
+        <header class="header">
+            <div class="header-left">
+                <h1>Blackhole</h1>
+                <nav class="nav-menu">
+                    <a href="index.html" class="nav-link">Services</a>
+                    <a href="plugins.html" class="nav-link active">Plugins</a>
+                </nav>
+                <div class="system-stats">
+                    <span class="stat">Loaded: <strong id="pluginsLoaded">0</strong></span>
+                    <span class="stat">Running: <strong id="pluginsRunning">0</strong></span>
+                    <span class="stat">Available: <strong id="pluginsAvailable">0</strong></span>
+                    <span class="stat">Updated: <strong id="lastUpdated">-</strong></span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="connection-status">
+                    <span id="connectionStatus" class="status-indicator">●</span>
+                    <span>Live</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main">
+            <!-- Plugin Controls -->
+            <section class="section">
+                <div class="section-header">
+                    <h2>Plugin Management</h2>
+                    <div class="plugin-actions">
+                        <button class="btn btn-primary" onclick="showUploadDialog()">
+                            <span class="icon">📦</span> Upload Plugin
+                        </button>
+                        <button class="btn btn-secondary" onclick="refreshPlugins()">
+                            <span class="icon">🔄</span> Refresh
+                        </button>
+                        <button class="btn btn-secondary" onclick="showMarketplace()">
+                            <span class="icon">🛒</span> Marketplace
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loaded Plugins -->
+                <div class="plugin-section">
+                    <h3>Loaded Plugins <span class="update-badge">Live Updates</span></h3>
+                    <table class="table plugin-table">
+                        <thead>
+                            <tr>
+                                <th>Plugin</th>
+                                <th>Version</th>
+                                <th>Status</th>
+                                <th>Type</th>
+                                <th>Uptime</th>
+                                <th>Resources</th>
+                                <th>State</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="loadedPlugins">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Available Plugins -->
+                <div class="plugin-section">
+                    <h3>Available Plugins</h3>
+                    <div class="plugin-grid" id="availablePlugins">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Upload Dialog -->
+    <div id="uploadDialog" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Upload Plugin</h3>
+                <button class="close-btn" onclick="closeUploadDialog()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="pluginFile" accept=".zip,.tar.gz" style="display: none;">
+                    <div class="upload-icon">📁</div>
+                    <p>Drag and drop plugin file here or <a href="#" onclick="document.getElementById('pluginFile').click()">browse</a></p>
+                    <p class="upload-hint">Supported formats: .zip, .tar.gz</p>
+                </div>
+                <div class="upload-details" id="uploadDetails" style="display: none;">
+                    <h4>Plugin Details</h4>
+                    <div class="detail-row">
+                        <span class="label">Name:</span>
+                        <span id="uploadPluginName">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Version:</span>
+                        <span id="uploadPluginVersion">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Size:</span>
+                        <span id="uploadPluginSize">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeUploadDialog()">Cancel</button>
+                <button class="btn btn-primary" id="uploadBtn" onclick="uploadPlugin()" disabled>Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hot Swap Dialog -->
+    <div id="hotSwapDialog" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Hot Swap Plugin</h3>
+                <button class="close-btn" onclick="closeHotSwapDialog()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="swap-info">
+                    <h4>Current Plugin</h4>
+                    <div class="detail-row">
+                        <span class="label">Name:</span>
+                        <span id="currentPluginName">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Version:</span>
+                        <span id="currentPluginVersion">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">State Size:</span>
+                        <span id="currentPluginState">-</span>
+                    </div>
+                </div>
+                <div class="swap-arrow">→</div>
+                <div class="swap-info">
+                    <h4>New Version</h4>
+                    <select id="newPluginVersion" class="form-control">
+                        <option value="">Select version...</option>
+                    </select>
+                    <div class="migration-info" id="migrationInfo" style="display: none;">
+                        <p class="info-message">✓ State migration available</p>
+                    </div>
+                </div>
+                <div class="swap-progress" id="swapProgress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-status" id="progressStatus">Initializing...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeHotSwapDialog()">Cancel</button>
+                <button class="btn btn-primary" id="swapBtn" onclick="performHotSwap()">Hot Swap</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plugin State Viewer -->
+    <div id="stateDialog" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Plugin State</h3>
+                <button class="close-btn" onclick="closeStateDialog()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="state-controls">
+                    <button class="btn btn-small" onclick="exportState()">Export</button>
+                    <button class="btn btn-small" onclick="importState()">Import</button>
+                    <button class="btn btn-small" onclick="refreshState()">Refresh</button>
+                </div>
+                <pre class="state-viewer" id="stateViewer">
+                    <!-- Plugin state JSON displayed here -->
+                </pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="plugins.js"></script>
+</body>
+</html>

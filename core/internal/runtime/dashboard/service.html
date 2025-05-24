@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Details - Blackhole Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="service-styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-nav">
+                <button id="backBtn" class="back-btn">← Back to Dashboard</button>
+                <h1 id="serviceTitle">Service Details</h1>
+                <div class="last-updated">
+                    Last Updated: <span id="lastUpdated">-</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main">
+            <!-- Service Overview Card -->
+            <div class="service-overview">
+                <div class="service-header-large">
+                    <div class="service-info">
+                        <h2 id="serviceName">Service Name</h2>
+                        <span class="status-badge-large" id="serviceStatus">Unknown</span>
+                    </div>
+                    <div class="service-actions-large">
+                        <button class="action-btn-large start-btn" id="startBtn" data-action="start">Start Service</button>
+                        <button class="action-btn-large stop-btn" id="stopBtn" data-action="stop">Stop Service</button>
+                        <button class="action-btn-large restart-btn" id="restartBtn" data-action="restart">Restart Service</button>
+                    </div>
+                </div>
+                
+                <div class="service-details-grid">
+                    <div class="detail-card">
+                        <h3>Process Information</h3>
+                        <div class="detail-content">
+                            <div class="detail-row">
+                                <span class="detail-label">Process ID (PID):</span>
+                                <span class="detail-value" id="servicePid">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Port:</span>
+                                <span class="detail-value" id="servicePort">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Socket Path:</span>
+                                <span class="detail-value" id="serviceSocket">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Uptime:</span>
+                                <span class="detail-value" id="serviceUptime">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-card">
+                        <h3>Health & Metrics</h3>
+                        <div class="detail-content">
+                            <div class="detail-row">
+                                <span class="detail-label">CPU Usage:</span>
+                                <span class="detail-value" id="serviceCpu">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Memory Usage:</span>
+                                <span class="detail-value" id="serviceMemory">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Last Health Check:</span>
+                                <span class="detail-value" id="serviceLastCheck">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Start Count:</span>
+                                <span class="detail-value" id="serviceStartCount">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-card">
+                        <h3>Configuration</h3>
+                        <div class="detail-content">
+                            <div class="detail-row">
+                                <span class="detail-label">Service Type:</span>
+                                <span class="detail-value" id="serviceType">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Auto-restart:</span>
+                                <span class="detail-value" id="serviceAutoRestart">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Log Level:</span>
+                                <span class="detail-value" id="serviceLogLevel">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Config File:</span>
+                                <span class="detail-value" id="serviceConfigFile">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Logs -->
+            <div class="logs-section">
+                <div class="logs-header">
+                    <h3>Service Logs <span id="logSource" class="log-source-indicator"></span></h3>
+                    <div class="logs-controls">
+                        <select id="logLevel" class="log-filter">
+                            <option value="all">All Levels</option>
+                            <option value="error">Error</option>
+                            <option value="warn">Warning</option>
+                            <option value="info">Info</option>
+                            <option value="debug">Debug</option>
+                        </select>
+                        <button id="clearLogsBtn" class="btn btn-secondary">Clear</button>
+                        <button id="downloadLogsBtn" class="btn btn-secondary">Download</button>
+                        <button id="autoScrollBtn" class="btn btn-secondary active">Auto-scroll</button>
+                    </div>
+                </div>
+                <div class="logs-container">
+                    <div id="logsContent" class="logs-content">
+                        <div class="log-entry info">
+                            <span class="log-timestamp">2025-05-22 10:30:15</span>
+                            <span class="log-level">INFO</span>
+                            <span class="log-message">Service initialized successfully</span>
+                        </div>
+                        <div class="log-entry error">
+                            <span class="log-timestamp">2025-05-22 10:30:16</span>
+                            <span class="log-level">ERROR</span>
+                            <span class="log-message">Failed to connect to database: connection timeout</span>
+                        </div>
+                        <div class="log-entry warn">
+                            <span class="log-timestamp">2025-05-22 10:30:17</span>
+                            <span class="log-level">WARN</span>
+                            <span class="log-message">High memory usage detected: 85%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h3>Quick Actions</h3>
+                <div class="action-grid">
+                    <button class="quick-action-btn" id="viewConfigBtn">
+                        <span class="action-icon">⚙️</span>
+                        View Configuration
+                    </button>
+                    <button class="quick-action-btn" id="exportLogsBtn">
+                        <span class="action-icon">📄</span>
+                        Export Logs
+                    </button>
+                    <button class="quick-action-btn" id="restartWithLogsBtn">
+                        <span class="action-icon">🔄</span>
+                        Restart with Debug
+                    </button>
+                    <button class="quick-action-btn" id="checkHealthBtn">
+                        <span class="action-icon">💚</span>
+                        Force Health Check
+                    </button>
+                    <button class="quick-action-btn" id="viewMetricsBtn">
+                        <span class="action-icon">📊</span>
+                        View Metrics
+                    </button>
+                    <button class="quick-action-btn" id="editConfigBtn">
+                        <span class="action-icon">✏️</span>
+                        Edit Configuration
+                    </button>
+                    <button class="quick-action-btn" id="checkPortBtn">
+                        <span class="action-icon">🔍</span>
+                        Check Port Usage
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="service.js"></script>
+</body>
+</html>

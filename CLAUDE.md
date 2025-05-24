@@ -10,66 +10,81 @@ Blackhole is a distributed content sharing platform implemented as a subprocess 
 
 ```
 blackhole/
-├── cmd/                    # Command-line applications
-│   └── blackhole/          # Main binary
-│       ├── main.go         # Application entry point
-│       └── commands/       # CLI commands
-│
-├── internal/               # Private application code
-│   ├── core/               # Core runtime
-│   │   ├── orchestrator.go # Service orchestrator
-│   │   ├── process.go      # Process management
-│   │   └── config.go       # Configuration
+├── core/                   # Technical implementation
+│   ├── cmd/                # Command-line applications
+│   │   └── blackhole/      # Main binary
+│   │       ├── main.go     # Application entry point
+│   │       └── commands/   # CLI commands
 │   │
-│   ├── mesh/               # Internal service mesh
-│   │   ├── router.go       # Request routing
-│   │   ├── eventbus.go     # Event system
-│   │   └── middleware.go   # Middleware chain
+│   ├── internal/           # Private application code
+│   │   ├── core/           # Core components
+│   │   │   ├── app/        # Application layer
+│   │   │   └── version.go  # Version information
+│   │   │
+│   │   ├── framework/      # Framework domains
+│   │   │   ├── economics/  # Economics domain
+│   │   │   ├── mesh/       # Mesh networking domain
+│   │   │   ├── plugins/    # Plugin management domain
+│   │   │   └── resources/  # Resource management domain
+│   │   │
+│   │   ├── runtime/        # Runtime domain
+│   │   │   ├── config/     # Configuration system
+│   │   │   ├── orchestrator/ # Process orchestration
+│   │   │   ├── lifecycle/  # Lifecycle management
+│   │   │   └── dashboard/   # Runtime monitoring dashboard
+│   │   │
+│   │   ├── rpc/            # RPC definitions
+│   │   │   ├── gen/        # Generated protobuf code
+│   │   │   └── proto/      # Protocol definitions
+│   │   │
+│   │   └── services/       # Service implementations
+│   │       ├── identity/   # Identity service
+│   │       ├── node/       # Node service & P2P
+│   │       ├── ledger/     # Ledger service
+│   │       ├── indexer/    # Indexer service
+│   │       ├── social/     # Social service
+│   │       ├── analytics/  # Analytics service
+│   │       ├── telemetry/  # Telemetry service
+│   │       └── wallet/     # Wallet service
 │   │
-│   ├── services/           # Service implementations
-│   │   ├── identity/       # Identity service (DIDs, registry, auth)
-│   │   ├── storage/        # Storage service (IPFS, Filecoin)
-│   │   ├── node/           # Node operations & P2P networking
-│   │   ├── ledger/         # Ledger service (Root Network)
-│   │   ├── indexer/        # Indexer service (SubQuery)
-│   │   ├── social/         # Social service (ActivityPub)
-│   │   ├── analytics/      # Analytics service
-│   │   ├── telemetry/      # Telemetry service
-│   │   └── wallet/         # Wallet service
+│   ├── pkg/                # Public packages and developer tools
+│   │   ├── api/            # Public API clients
+│   │   ├── sdk/            # SDK for developers
+│   │   ├── tools/          # Developer tools
+│   │   ├── templates/      # Project templates
+│   │   └── types/          # Shared type definitions
 │   │
-│   └── plugins/            # Plugin system
-│       ├── manager.go      # Plugin manager
-│       └── builtin/        # Built-in plugins
+│   ├── test/               # All tests
+│   │   ├── unit/           # Unit tests
+│   │   └── integration/    # Integration tests
+│   │
+│   ├── configs/            # Configuration files
+│   ├── examples/           # Example applications
+│   ├── scripts/            # Build and utility scripts
+│   └── bin/                # Build artifacts
 │
-├── pkg/                    # Public packages
-│   ├── api/                # Public API clients
-│   ├── types/              # Shared type definitions
-│   └── sdk/                # SDK for developers
+├── ecosystem/              # Community, governance, docs, and business
+│   ├── docs/               # Documentation
+│   │   ├── 04_domains/     # Domain documentation
+│   │   ├── 05_architecture/# Architecture specs
+│   │   ├── 06_guides/      # Developer guides
+│   │   ├── 07_reference/   # API reference
+│   │   └── 08_strategy/    # Strategy docs
+│   ├── marketplace/        # Plugin marketplace
+│   ├── partners/           # Partner network
+│   ├── training/           # Education programs
+│   ├── jobs/               # Career opportunities
+│   ├── governance/         # Board and policies
+│   ├── community/          # Community programs
+│   ├── events/             # Conferences and meetups
+│   ├── certification/      # Certification programs
+│   └── enterprise/         # Enterprise solutions and support
 │
-├── client-libs/            # Client libraries
-│   ├── javascript/         # JavaScript/TypeScript SDK
-│   ├── react/              # React components
-│   └── mobile/             # Mobile SDKs
-│
-├── applications/           # Production-ready applications
-│   ├── web-platform/       # Main web application
-│   ├── mobile-app/         # React Native mobile app
-│   ├── desktop-app/        # Electron desktop app
-│   └── wallet-app/         # Self-managed wallet app
-│
-├── scripts/                # Build and utility scripts
-├── configs/                # Configuration files
-├── deployments/            # Deployment configurations
-├── examples/               # Example applications
-├── test/                   # Integration tests
-├── docs/                   # Documentation
-│   ├── architecture/       # Architecture documentation
-│   ├── api/                # API documentation
-│   ├── guides/             # Developer guides
-│   └── tutorials/          # Tutorials
+├── applications/           # Reference applications
 │
 ├── go.mod                  # Go module definition
 ├── go.sum                  # Go module checksums
+├── go.work                 # Go workspace
 ├── Makefile                # Build automation
 ├── README.md               # Project overview
 └── CLAUDE.md               # AI assistant context
@@ -88,7 +103,7 @@ blackhole/
 
 - Run the binary: `./bin/blackhole`
 - Start all services: `./bin/blackhole start --all`
-- Start specific services: `./bin/blackhole start --services=identity,storage`
+- Start specific services: `./bin/blackhole start --services=identity,node`
 - Check service status: `./bin/blackhole status`
 - View service logs: `./bin/blackhole logs identity`
 - Run with hot reload: `make dev`
@@ -127,7 +142,6 @@ The platform uses a subprocess architecture where services run as independent OS
 
 - **Go**: Primary language for the single binary
 - **libp2p**: P2P networking
-- **IPFS/Filecoin**: Content storage
 - **Root Network**: Blockchain integration
 - **ActivityPub**: Social federation
 - **gRPC**: Internal service communication
@@ -135,13 +149,15 @@ The platform uses a subprocess architecture where services run as independent OS
 
 ## Development Workflow
 
-1. **Service Development**: Implement services in `internal/services/`
-2. **Core Development**: Work on orchestrator in `internal/core/`
-3. **RPC Development**: Define gRPC services in `internal/rpc/`
-4. **API Development**: Define public APIs in `pkg/api/`
-5. **SDK Development**: Build SDK in `pkg/sdk/`
-6. **Testing**: Write tests alongside code (using `_test.go` files)
-7. **Documentation**: Update docs as you go
+1. **Service Development**: Implement services in `core/internal/services/`
+2. **Core Development**: Work on components in `core/internal/core/`
+3. **Runtime Development**: Work on orchestrator in `core/internal/runtime/`
+4. **Framework Development**: Work on domains in `core/internal/framework/`
+5. **RPC Development**: Define gRPC services in `core/internal/rpc/`
+6. **API Development**: Define public APIs in `core/pkg/api/`
+7. **SDK Development**: Build SDK in `core/pkg/sdk/`
+8. **Testing**: Write tests in `core/test/` directory (NOT alongside code)
+9. **Documentation**: Update docs as you go
 
 ## Service Architecture
 

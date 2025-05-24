@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package blackhole.plugin.storage.v1;
+
+option go_package = "github.com/handcraftdev/blackhole/core/pkg/plugins/storage/proto/v1;storagev1";
+
+import "google/protobuf/timestamp.proto";
+
+// StoragePlugin extended with mesh communication
+service StoragePlugin {
+  // ... existing storage methods ...
+  
+  // Mesh-aware methods for cross-plugin communication
+  rpc RegisterContentLocation(RegisterContentLocationRequest) returns (RegisterContentLocationResponse);
+  rpc GetContentLocations(GetContentLocationsRequest) returns (GetContentLocationsResponse);
+  rpc ReplicateToNode(ReplicateToNodeRequest) returns (ReplicateToNodeResponse);
+}
+
+// Register content availability with specific nodes
+message RegisterContentLocationRequest {
+  string content_id = 1;
+  string node_id = 2;  // Node plugin instance that has this content
+  repeated string multiaddrs = 3;  // How to reach that node
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+message RegisterContentLocationResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Query which nodes have specific content
+message GetContentLocationsRequest {
+  string content_id = 1;
+  int32 max_locations = 2;
+  bool only_online = 3;
+}
+
+message GetContentLocationsResponse {
+  repeated ContentLocation locations = 1;
+}
+
+message ContentLocation {
+  string node_id = 1;
+  repeated string multiaddrs = 2;
+  google.protobuf.Timestamp last_seen = 3;
+  bool is_online = 4;
+  double reliability_score = 5;
+}
+
+// Direct replication between storage and node plugins
+message ReplicateToNodeRequest {
+  string content_id = 1;
+  string target_node_id = 2;
+  int32 priority = 3;
+}
+
+message ReplicateToNodeResponse {
+  bool success = 1;
+  string message = 2;
+  string replication_id = 3;
+}

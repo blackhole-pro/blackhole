@@ -1,211 +1,441 @@
-# Blackhole
+# Blackhole Foundation
 
-[![GitHub](https://img.shields.io/badge/GitHub-handcraftdev/blackhole-blue)](https://github.com/handcraftdev/blackhole)
+[![GitHub](https://img.shields.io/badge/GitHub-blackhole-foundation/core-blue)](https://github.com/blackhole-foundation/core)
+[![Foundation](https://img.shields.io/badge/Foundation-blackhole.foundation-green)](https://blackhole.foundation)
+[![Community](https://img.shields.io/badge/Community-Join%20Us-orange)](https://community.blackhole.foundation)
 
-Blackhole is a truly decentralized protocol that puts users in control of their data while enabling engaging social experiences. Built on a foundation of IPFS/Filecoin for storage, DIDs for self-sovereign identity, and ActivityPub for social federation, Blackhole creates a new paradigm for content sharing that balances user sovereignty with service provider innovation.
+**The distributed computing framework that enables fault-isolated, hot-loadable plugin execution across any network topology.**
 
-## Three-Layer Architecture
+Inspired by Drupal's successful open source and business model, Blackhole Foundation provides revolutionary infrastructure with true process isolation, network-transparent plugin management, and seamless distributed coordination - making it the foundational framework for next-generation distributed applications.
 
-Blackhole's architecture is designed with decentralization at its core:
+## 🌟 Following Drupal's Success Model
 
-1. **End Users (Clients)** - Lightweight web and mobile applications that interact with content and social features
-2. **Service Providers** - Organizations building branded experiences on the Blackhole platform while preserving user sovereignty
-3. **Blackhole Nodes** - Decentralized P2P network handling storage, processing, identity, and federation
+Like Drupal transformed web development with its modular, community-driven approach, Blackhole Foundation is revolutionizing distributed computing through:
 
-## Key Features
+- **🏛️ Foundation Governance**: Non-profit foundation supporting the ecosystem
+- **🎯 Dual Product Strategy**: Core framework + simplified platform tools  
+- **🔌 Plugin Marketplace**: Community-driven extension ecosystem
+- **🤝 Partner Network**: Certified professionals and service providers
+- **📚 Certification Programs**: Official training and developer credentials
 
-- **Self-Sovereign Identity** - DID-based identity with verifiable credentials
-- **Single-Transfer Content Flow** - Content uploaded directly to Blackhole nodes, optimizing bandwidth
-- **Decentralized Storage** - IPFS for content addressing and Filecoin for persistent storage
-- **Content Ledger** - Root Network blockchain for ownership and transaction records
-- **Social Federation** - ActivityPub-compatible social interactions that connect with the fediverse
-- **Service Provider SDK** - Comprehensive tools for building on the platform with minimal complexity
-- **Privacy-Preserving Analytics** - Content consumption tracking with user privacy controls
-- **P2P Infrastructure** - Distributed node network using libp2p for robust infrastructure
+## 🎯 Framework vs Platform vs Application
 
-## Subprocess Architecture
+```
+┌─────────────────────────────────────────────────────────┐
+│ 🎯 APPLICATION LAYER                                    │
+│ User-facing apps built on the framework                │
+│ (content sharing, office suite, media streaming, etc.) │
+├─────────────────────────────────────────────────────────┤
+│ 🛠️ PLATFORM LAYER                                       │
+│ Developer tools, SDK, marketplace, documentation       │
+│ (plugin development kit, marketplace, tutorials)       │
+├─────────────────────────────────────────────────────────┤
+│ 🔌 FRAMEWORK LAYER                                      │
+│ Core domains that make everything work                 │
+│ ┌─────────────┬─────────────┬─────────────┬─────────────┐ │
+│ │   Plugin    │    Mesh     │  Resource   │  Economic   │ │
+│ │ Management  │ Networking  │ Management  │   System    │ │
+│ │   Domain    │   Domain    │   Domain    │   Domain    │ │
+│ └─────────────┴─────────────┴─────────────┴─────────────┘ │
+├─────────────────────────────────────────────────────────┤
+│ ⚙️ RUNTIME LAYER                                        │
+│ Process orchestration, lifecycle, system management    │
+│ (the foundation everything else runs on)               │
+├─────────────────────────────────────────────────────────┤
+│ 🖥️ INFRASTRUCTURE LAYER                                 │
+│ OS, network, hardware (not our responsibility)         │
+└─────────────────────────────────────────────────────────┘
+```
 
-Blackhole uses a subprocess architecture that distributes as a single binary but runs services as independent OS processes. This approach provides:
+**Blackhole Foundation is the Framework Layer** - the foundational infrastructure that platforms and applications build upon.
 
-- **Deployment Simplicity** - One binary to distribute and deploy
-- **Service Isolation** - Process crashes don't affect other services  
-- **Individual Control** - Restart services independently
-- **Resource Management** - OS-level CPU, memory, and I/O limits
-- **Security Boundaries** - Process-level security isolation
+## 🏗️ Core Architecture (5 Minutes to Understand)
 
-Services communicate via gRPC over Unix sockets locally and TCP for remote communication.
+Blackhole Foundation uses a **5-domain architecture** with **clean vertical layers**:
 
-## Project Structure
+```
+📱 applications/              # User apps (file storage, media streaming, office suite)
+🌍 ecosystem/                 # Community, docs, marketplace, governance  
+🛠️ core/pkg/                  # Public APIs and developer tools  
+🔌 core/internal/framework/    # 4 Core Domains (plugins, mesh, resources, economics)
+⚙️ core/internal/runtime/      # Process orchestration and system management
+🖥️ [Infrastructure]           # OS, network, hardware (not our responsibility)
+```
+
+### Core Domains
+
+**🔌 Plugin Management Domain**
+- Plugin discovery, loading, and execution
+- Hot loading/unloading without framework downtime
+- Fault isolation - plugin failures never compromise the core
+- Language-agnostic plugin development
+
+**🌐 Mesh Networking Domain**
+- Communication across local, remote, P2P, cloud, and edge topologies
+- Service discovery and registration
+- Load balancing and failover
+- Security and encryption
+
+**⚡ Resource Management Domain**
+- CPU, memory, network, and storage allocation
+- Intelligent scheduling across distributed resources
+- Real-time monitoring and optimization
+- Cost optimization and usage analytics
+
+**💰 Economics Domain**
+- Usage-based pricing and billing
+- Revenue distribution to contributors
+- Resource marketplace and trading
+- Economic incentive alignment
+
+**🌍 Ecosystem Domain**
+- Developer SDK and tools (in `core/pkg/`)
+- Plugin marketplace and registry (in `ecosystem/marketplace/`)
+- Documentation and tutorials (in `ecosystem/docs/`)
+- Community and governance (in `ecosystem/`)
+
+## 🚀 Key Capabilities
+
+### True Fault Isolation
+- **Process-level isolation**: Plugins run as separate OS processes
+- **Resource boundaries**: OS-level CPU, memory, and I/O limits
+- **Security sandboxing**: Process-level security isolation
+- **Crash resilience**: Plugin failures never affect the framework core
+
+### Hot Loading System
+- **Zero-downtime updates**: Add/remove/update plugins without stopping the framework
+- **State migration**: Seamless state transfer during plugin updates
+- **Multi-version support**: Multiple plugin versions during transitions
+- **Automatic rollback**: Instant rollback on update failures
+
+### Network Transparency
+- **Location independence**: Plugins execute identically whether local, remote, cloud, or edge
+- **Dynamic migration**: Running plugins can be migrated between execution environments
+- **Intelligent routing**: Framework automatically routes based on availability and policy
+- **Global coordination**: Unified management across multiple network topologies
+
+### Plugin Ecosystem
+- **Language agnostic**: Plugins in any programming language
+- **Comprehensive SDK**: Framework APIs for multiple languages
+- **Plugin marketplace**: Discovery, distribution, and monetization
+- **Community driven**: Open-source core with enterprise features
+
+## 📁 Project Organization (Drupal-Inspired)
+
+Following Drupal's successful organizational model:
 
 ```
 blackhole/
-├── cmd/                    # Command-line applications
-│   └── blackhole/          # Main binary (orchestrator)
-├── internal/               # Private application code
-│   ├── core/               # Core orchestrator
-│   │   ├── orchestrator.go # Service orchestrator
-│   │   ├── process.go      # Process management
-│   │   └── config.go       # Configuration
-│   ├── rpc/                # RPC communication
-│   │   ├── client.go       # gRPC clients
-│   │   ├── server.go       # gRPC servers
-│   │   └── registry.go     # Service registry
-│   ├── services/           # Service implementations
-│   │   ├── identity/       # Identity service
-│   │   ├── storage/        # Storage service
-│   │   ├── ledger/         # Ledger service
-│   │   ├── social/         # Social service
-│   │   └── ...             # Other services
-│   └── plugins/            # Plugin system
-├── pkg/                    # Public packages
-│   ├── api/                # API clients
-│   ├── types/              # Type definitions
-│   └── sdk/                # Developer SDK
-├── client-libs/            # Client libraries
-│   ├── javascript/         # JS/TS SDK
-│   ├── react/              # React components
-│   └── mobile/             # Mobile SDKs
-└── docs/                   # Documentation
+├── core/                     # Technical implementation
+│   ├── internal/             # Private application code
+│   │   ├── runtime/          # Process orchestration and lifecycle
+│   │   ├── framework/        # Core domains (plugins, mesh, resources, economics)
+│   │   └── services/         # Service implementations
+│   ├── pkg/                  # Public packages
+│   │   ├── api/              # Public APIs
+│   │   ├── sdk/              # Developer SDK
+│   │   ├── tools/            # Developer tools
+│   │   └── templates/        # Project templates
+│   └── test/                 # All tests
+├── ecosystem/                # Community, docs, and business (like Drupal Association)
+│   ├── docs/                 # Comprehensive documentation
+│   │   ├── 04_domains/       # Technical domain documentation
+│   │   ├── 05_architecture/  # Architecture specifications
+│   │   ├── 06_guides/        # Developer and operations guides
+│   │   ├── 07_reference/     # API and configuration reference
+│   │   └── 08_strategy/      # Strategy and business documentation
+│   ├── marketplace/          # Plugin discovery and distribution
+│   ├── partners/             # Certified service providers
+│   ├── training/             # Education and certification
+│   ├── jobs/                 # Career opportunities
+│   ├── governance/           # Foundation governance
+│   ├── community/            # Community programs
+│   ├── events/               # Conferences and meetups
+│   ├── certification/        # Developer certification
+│   └── enterprise/           # Enterprise solutions
+└── applications/             # Reference applications and examples
+    ├── file-storage/         # Distributed file storage
+    ├── media-streaming/      # P2P media streaming
+    ├── office-suite/         # Collaborative office suite
+    └── social-network/       # Decentralized social platform
 ```
 
-For detailed architecture, see [PROJECT.md](./PROJECT.md) and [subprocess_architecture.md](./docs/architecture/subprocess_architecture.md).
+## 🚀 Getting Started
 
-## Getting Started
+Choose your path based on your role:
 
-### Prerequisites
-
-- Go 1.21+
-- Node.js 18+ (for client SDKs)
-- Git
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/handcraftdev/blackhole.git
-   cd blackhole
-   ```
-
-2. Build the binary:
-   ```bash
-   make build
-   ```
-
-3. Start all services:
-   ```bash
-   ./blackhole start --all
-   ```
-
-### Service Management
-
+### 👨‍💻 **Framework Developers** (Advanced)
+Start with **Foundation Core** for maximum control and customization:
 ```bash
-# Start specific services
-./blackhole start --services=identity,storage,ledger
+git clone https://github.com/blackhole-foundation/core
+cd core && make setup-dev && make build
+```
+→ [Core Development Guide](./ecosystem/docs/06_guides/06_01-development_guidelines.md)
 
-# Check service status
+### 🛠️ **Application Developers** (Simplified)  
+Start with **Platform Tools** for rapid development:
+```bash
+npm install @blackhole/platform-tools
+blackhole init my-app && blackhole dev
+```
+→ [Platform Tools Guide](./core/pkg/tools/README.md)
+
+### 🏢 **Enterprise Teams** (Managed)
+Contact our **Enterprise Team** for managed solutions:
+```bash
+# Contact enterprise@blackhole.foundation
+```
+→ [Enterprise Solutions](./ecosystem/enterprise/README.md)
+
+### 🤝 **Service Providers** (Partners)
+Join our **Partner Network** for certification and leads:
+→ [Become a Partner](./ecosystem/partners/README.md)
+
+## 🌍 Community & Ecosystem
+
+Following Drupal's community-first approach:
+
+- **🏛️ [Governance](./ecosystem/governance/README.md)**: Foundation governance and policies
+- **🔌 [Marketplace](./ecosystem/marketplace/README.md)**: Plugin discovery and monetization  
+- **🤝 [Partners](./ecosystem/partners/README.md)**: Certified service providers
+- **📚 [Training](./ecosystem/training/README.md)**: Official courses and certification
+- **💼 [Jobs](./ecosystem/jobs/README.md)**: Career opportunities in the ecosystem
+
+**Quick Start**: Read [`ARCHITECTURE_QUICK_START.md`](./ecosystem/docs/01-ARCHITECTURE_QUICK_START.md) for immediate understanding.
+
+## 🎛️ Framework Management
+
+### Starting the Framework
+```bash
+# Start with default configuration
+./blackhole start
+
+# Start with specific topology
+./blackhole start --topology local
+
+# Start with custom plugins
+./blackhole start --plugins=identity,storage,networking
+```
+
+### Plugin Management
+```bash
+# Discover available plugins
+./blackhole plugin discover
+
+# Load a plugin
+./blackhole plugin load my-plugin
+
+# Hot reload a plugin
+./blackhole plugin reload my-plugin --version 2.0.0
+
+# Unload a plugin
+./blackhole plugin unload my-plugin
+```
+
+### System Operations
+```bash
+# Check framework status
 ./blackhole status
 
-# Restart a service
-./blackhole restart identity
+# Monitor resource usage
+./blackhole monitor --dashboard
 
-# View service logs
-./blackhole logs storage --follow
+# View plugin logs
+./blackhole logs my-plugin --follow
 
-# Stop services
-./blackhole stop --all
+# Framework health check
+./blackhole health --detailed
 ```
 
-## Development
+## 🔌 Plugin Development
 
-Blackhole is primarily written in Go, with client SDKs in various languages.
+### Simple Plugin Example
+```go
+package main
 
-### Repository
+import (
+    "context"
+    "github.com/blackhole-prodev/blackhole/pkg/plugins"
+)
 
-The project is hosted on GitHub at [handcraftdev/blackhole](https://github.com/handcraftdev/blackhole). The Go module path is `github.com/handcraftdev/blackhole`.
+type MyPlugin struct {
+    config *MyConfig
+}
 
-### Common Commands
+func (p *MyPlugin) Initialize(ctx context.Context, config *plugins.PluginConfig) error {
+    // Plugin initialization
+    return nil
+}
 
+func (p *MyPlugin) Start(ctx context.Context) error {
+    // Start plugin services
+    return nil
+}
+
+func (p *MyPlugin) Stop(ctx context.Context) error {
+    // Graceful shutdown
+    return nil
+}
+
+func (p *MyPlugin) HandleRequest(ctx context.Context, req *plugins.PluginRequest) (*plugins.PluginResponse, error) {
+    // Process requests
+    return &plugins.PluginResponse{Data: []byte("Hello, World!")}, nil
+}
+
+func main() {
+    plugin := &MyPlugin{}
+    plugins.Run(plugin)
+}
+```
+
+### Plugin CLI
 ```bash
-# Build the main binary
-make build
+# Create new plugin
+blackhole plugin create --name my-plugin --type service
 
-# Run tests
-make test
+# Build plugin
+blackhole plugin build --target local,remote,cloud
 
-# Run with hot reload
-make dev
+# Test plugin
+blackhole plugin test --integration
 
-# Build for all platforms
-make build-all
-
-# Run linter
-make lint
-
-# Generate protobuf files
-make proto
-
-# Build client SDKs
-cd client-libs/javascript && npm run build
+# Publish to marketplace
+blackhole plugin publish --registry public
 ```
 
-### Configuration
+## 🌍 Deployment Topologies
 
-Services are configured via YAML:
-
+### 1. Local Development
 ```yaml
-# blackhole.yaml
-orchestrator:
-  socket_dir: /var/run/blackhole
-  log_level: info
-
-services:
-  identity:
-    resources:
-      cpu: 200      # 2 CPU cores
-      memory: 1024  # 1GB RAM
-    config:
-      database: postgres://localhost/identity
+# Single-node development
+topology: local
+plugins:
+  - identity-service
+  - storage-service
+  - networking-service
 ```
 
-## For Service Providers
+### 2. Enterprise Storage Grid
+```yaml
+# Multi-node storage cluster
+topology: enterprise
+coordinator:
+  plugins: [mesh-coordinator, storage-manager, auth-service]
+storage_nodes:
+  - location: datacenter_1
+    plugins: [storage-node, mesh-client]
+  - location: datacenter_2
+    plugins: [storage-node, mesh-client]
+```
 
-Blackhole empowers service providers to build branded experiences on a decentralized foundation. By handling the complex infrastructure, Blackhole allows providers to focus on creating value for their users. The client SDK provides:
+### 3. P2P Network
+```yaml
+# Peer-to-peer distributed network
+topology: p2p
+plugins:
+  - p2p-networking
+  - content-sharing
+  - social-features
+  - distributed-storage
+```
 
-- **User Authentication** - DID-based authentication with verifiable credentials
-- **Content Orchestration** - Single-transfer uploads with progress tracking
-- **Discovery Engine** - Content search, recommendations, and trending
-- **Social Integration** - ActivityPub-compatible social interactions
-- **UI Components** - Customizable, themeable component library
-- **Analytics Dashboard** - Privacy-preserving user engagement metrics
-- **Developer Resources** - Comprehensive documentation and examples
+### 4. Hybrid Cloud
+```yaml
+# Mixed on-premise and cloud deployment
+topology: hybrid
+on_premise:
+  plugins: [identity, content, local-storage]
+cloud:
+  plugins: [ai-processing, analytics, backup]
+edge:
+  plugins: [content-delivery, caching]
+```
 
-## Documentation
+## 🏢 Enterprise Features
 
-- **Architecture**: [PROJECT.md](./PROJECT.md) - Detailed platform architecture and design
-- **Subprocess Architecture**: [docs/architecture/subprocess_architecture.md](./docs/architecture/subprocess_architecture.md) - Process management patterns
-- **RPC Communication**: [docs/architecture/rpc_communication.md](./docs/architecture/rpc_communication.md) - gRPC patterns and practices
-- **Service Lifecycle**: [docs/architecture/service_lifecycle.md](./docs/architecture/service_lifecycle.md) - Startup, shutdown, and restart procedures
-- **Current Status**: [CURRENT_STATUS.md](./CURRENT_STATUS.md) - Project progress and next steps
-- **User Flows**: [docs/flowcharts/](./docs/flowcharts/) - Visual diagrams of key platform processes
-- **Data Models**: [docs/ast/](./docs/ast/) - JSON Schema AST models for core data structures
-- **Service Documentation**: [docs/architecture/services/](./docs/architecture/services/) - Individual service architectures
-- **Developer Guides**: Coming soon - Tutorials and implementation guides
+### Security and Compliance
+- **Zero-trust architecture**: Every request verified
+- **Automated compliance**: GDPR, HIPAA, SOX support
+- **Fine-grained permissions**: Cell-level data control
+- **Audit logging**: Complete activity tracking
 
-## Decentralized Ecosystem
+### Operations and Monitoring
+- **Real-time metrics**: Performance and usage analytics
+- **Health monitoring**: Automatic failure detection
+- **Capacity planning**: Predictive resource management
+- **Incident response**: Automated recovery procedures
 
-Blackhole is more than a platform—it's a decentralized ecosystem that:
+### Integration and Migration
+- **Legacy system bridges**: Connect existing systems
+- **Gradual migration**: Incremental modernization
+- **API compatibility**: RESTful and GraphQL interfaces
+- **Data portability**: Standard export formats
 
-- Preserves user sovereignty through DIDs and decentralized storage
-- Enables service provider innovation without compromising privacy
-- Connects to the broader fediverse through ActivityPub
-- Leverages IPFS, Filecoin, and Root Network for robust infrastructure
-- Optimizes content flows for bandwidth efficiency
-- Provides comprehensive analytics while respecting privacy
+## 📚 Documentation
 
-## License
+### Quick Start
+- **[Architecture Overview](./ecosystem/docs/01-ARCHITECTURE_QUICK_START.md)** - 5-minute framework introduction
+- **[Foundation Document](./ecosystem/docs/02-blackhole_foundation.md)** - Comprehensive framework specification
+- **[Plugin Development Guide](./ecosystem/docs/04_domains/04_02_plugins/04_02_01-development.md)** - Step-by-step plugin creation
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### Architecture
+- **[Core Domains](./ecosystem/docs/04_domains/)** - Per-domain technical documentation
+- **[Architectural Foundation](./ecosystem/docs/05_architecture/05_01-architectural_foundation.md)** - Core principles
+- **[Development Guidelines](./ecosystem/docs/06_guides/06_01-development_guidelines.md)** - Best practices
 
-## Contributing
+### Development
+- **[Developer Guidelines](./ecosystem/docs/06_guides/06_01-development_guidelines.md)** - Code organization and practices
+- **[Domain Documentation](./ecosystem/docs/04_domains/)** - Technical domain specifications
+- **[Reference](./ecosystem/docs/07_reference/)** - API and configuration reference
 
-Contributions are welcome! The Blackhole platform is designed to be community-driven with a focus on creating a truly decentralized ecosystem. Please see our [contributing guidelines](./CONTRIBUTING.md) for more information.
+### Strategy
+- **[Economic Strategy](./ecosystem/docs/08_strategy/)** - Business and economic models
+- **[Competitive Research](./ecosystem/docs/08_strategy/08_03-competitive_research_summary.md)** - Market analysis
+
+## 🤝 Contributing
+
+Blackhole Foundation is built as a community-driven project with enterprise backing. We welcome contributions from developers, organizations, and users.
+
+### Development Process
+1. **Discuss**: Join our [community forums](https://community.blackhole.dev) 
+2. **Plan**: Create or comment on GitHub issues
+3. **Code**: Follow our [development guidelines](./ecosystem/docs/06_guides/06_01-development_guidelines.md)
+4. **Test**: Ensure comprehensive test coverage
+5. **Review**: Submit pull requests for community review
+
+### Community Resources
+- **[Developer Community](https://community.blackhole.dev)** - Forums and discussions
+- **[Plugin Marketplace](https://marketplace.blackhole.dev)** - Plugin discovery and distribution  
+- **[Documentation Portal](https://docs.blackhole.dev)** - Comprehensive guides and tutorials
+- **[Framework Conferences](https://conference.blackhole.dev)** - Annual developer conferences
+
+## 📄 License
+
+Blackhole Foundation is released under the Apache 2.0 License - see the [LICENSE](./LICENSE) file for details.
+
+The framework's open-source core enables community innovation while enterprise features provide commercial sustainability.
+
+## 🚀 Getting Started
+
+1. **Quick Start**: Download and run the framework
+   ```bash
+   curl -sSL https://get.blackhole.dev | sh
+   blackhole init --topology local
+   ```
+
+2. **Create Your First Plugin**:
+   ```bash
+   blackhole plugin create my-first-plugin --template service
+   cd my-first-plugin
+   make build
+   blackhole plugin load ./my-first-plugin
+   ```
+
+3. **Join the Community**:
+   - Star the repository on GitHub
+   - Join our [community forums](https://community.blackhole.dev)
+   - Follow us on social media [@BlackholeFoundation](https://twitter.com/BlackholeFoundation)
+
+---
+
+**Ready to build the future of distributed computing?** Start with Blackhole Foundation today.
