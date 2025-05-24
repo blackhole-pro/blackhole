@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackhole Plugin Marketplace</title>
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🌌 Blackhole Plugin Marketplace</h1>
+            <p>Discover and install plugins for the Blackhole distributed computing framework</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <input type="search" id="search" placeholder="Search plugins..." />
+            <select id="category-filter">
+                <option value="">All Categories</option>
+                <option value="networking">Networking</option>
+                <option value="storage">Storage</option>
+                <option value="security">Security</option>
+                <option value="analytics">Analytics</option>
+            </select>
+            <label>
+                <input type="checkbox" id="official-only" />
+                Official Only
+            </label>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div id="plugin-grid" class="plugin-grid">
+                <!-- Plugins will be loaded here -->
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>Part of the <a href="https://github.com/blackhole-foundation/blackhole">Blackhole Project</a></p>
+            <p><a href="https://github.com/blackhole-foundation/blackhole/tree/main/ecosystem/marketplace">Submit a Plugin</a></p>
+        </div>
+    </footer>
+    
+    <script src="assets/marketplace.js"></script>
+</body>
+</html>

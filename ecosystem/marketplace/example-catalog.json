@@ -1,0 +1,176 @@
+{
+  "version": "1.0",
+  "updated": "2024-01-25T12:00:00Z",
+  "stats": {
+    "totalPlugins": 3,
+    "totalDownloads": 45678,
+    "categories": ["networking", "storage", "security"]
+  },
+  "plugins": [
+    {
+      "id": "node",
+      "name": "Node Plugin",
+      "description": "P2P networking and distributed communication plugin for Blackhole",
+      "category": "networking",
+      "official": true,
+      "featured": true,
+      "latest": "1.0.0",
+      "versions": {
+        "1.0.0": {
+          "date": "2024-01-25",
+          "changelog": "Initial release with full P2P networking support",
+          "compatibility": {
+            "blackhole": ">=1.0.0",
+            "mesh": ">=1.0.0"
+          },
+          "platforms": {
+            "darwin-amd64": {
+              "url": "https://github.com/blackhole-foundation/node-plugin/releases/download/v1.0.0/node-darwin-amd64-v1.0.0.plugin",
+              "sha256": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+              "size": 15728640
+            },
+            "darwin-arm64": {
+              "url": "https://github.com/blackhole-foundation/node-plugin/releases/download/v1.0.0/node-darwin-arm64-v1.0.0.plugin",
+              "sha256": "b2c3d4e5f67890123456789012345678901234567890abcdef1234567890abcd",
+              "size": 15728640
+            },
+            "linux-amd64": {
+              "url": "https://github.com/blackhole-foundation/node-plugin/releases/download/v1.0.0/node-linux-amd64-v1.0.0.plugin",
+              "sha256": "c3d4e5f678901234567890123456789012345678901234567890abcdef123456",
+              "size": 16777216
+            },
+            "linux-arm64": {
+              "url": "https://github.com/blackhole-foundation/node-plugin/releases/download/v1.0.0/node-linux-arm64-v1.0.0.plugin",
+              "sha256": "d4e5f6789012345678901234567890123456789012345678901234567890abcd",
+              "size": 16777216
+            }
+          },
+          "signature": "https://github.com/blackhole-foundation/node-plugin/releases/download/v1.0.0/node-v1.0.0.plugin.sig"
+        },
+        "0.9.0": {
+          "date": "2024-01-01",
+          "changelog": "Beta release",
+          "compatibility": {
+            "blackhole": ">=0.9.0"
+          }
+        }
+      },
+      "repository": "https://github.com/blackhole-foundation/node-plugin",
+      "homepage": "https://docs.blackhole.io/plugins/node",
+      "documentation": "https://github.com/blackhole-foundation/node-plugin/blob/main/README.md",
+      "issues": "https://github.com/blackhole-foundation/node-plugin/issues",
+      "license": "MIT",
+      "author": {
+        "name": "Blackhole Foundation",
+        "email": "plugins@blackhole.io",
+        "url": "https://github.com/blackhole-foundation"
+      },
+      "maintainers": [
+        {
+          "name": "Core Team",
+          "github": "blackhole-foundation"
+        }
+      ],
+      "keywords": ["p2p", "networking", "libp2p", "distributed", "mesh"],
+      "stats": {
+        "downloads": {
+          "total": 12456,
+          "weekly": 892,
+          "monthly": 3421
+        },
+        "stars": 234,
+        "watchers": 45,
+        "forks": 12,
+        "issues": {
+          "open": 3,
+          "closed": 47
+        },
+        "lastUpdated": "2024-01-25T00:00:00Z"
+      },
+      "badges": {
+        "verified": true,
+        "security": "passed",
+        "tests": "passing",
+        "coverage": 92
+      }
+    },
+    {
+      "id": "storage",
+      "name": "Storage Plugin",
+      "description": "Distributed storage with IPFS integration and Reed-Solomon erasure coding",
+      "category": "storage",
+      "official": true,
+      "featured": true,
+      "latest": "1.0.0",
+      "versions": {
+        "1.0.0": {
+          "date": "2024-01-20",
+          "compatibility": {
+            "blackhole": ">=1.0.0",
+            "plugins": {
+              "node": ">=1.0.0"
+            }
+          },
+          "platforms": {
+            "darwin-amd64": {
+              "url": "https://github.com/blackhole-foundation/storage-plugin/releases/download/v1.0.0/storage-darwin-amd64-v1.0.0.plugin",
+              "sha256": "e5f67890123456789012345678901234567890123456789012345678901234567",
+              "size": 20971520
+            }
+          }
+        }
+      },
+      "repository": "https://github.com/blackhole-foundation/storage-plugin",
+      "license": "MIT",
+      "author": {
+        "name": "Blackhole Foundation"
+      },
+      "stats": {
+        "downloads": {
+          "total": 8234
+        },
+        "stars": 156
+      }
+    },
+    {
+      "id": "analytics-community",
+      "name": "Community Analytics",
+      "description": "Real-time analytics and monitoring dashboard",
+      "category": "analytics",
+      "official": false,
+      "featured": false,
+      "latest": "0.5.0",
+      "versions": {
+        "0.5.0": {
+          "date": "2024-01-15",
+          "compatibility": {
+            "blackhole": ">=1.0.0"
+          },
+          "platforms": {
+            "darwin-amd64": {
+              "url": "https://github.com/awesome-dev/analytics-plugin/releases/download/v0.5.0/analytics-darwin-amd64-v0.5.0.plugin",
+              "sha256": "f6789012345678901234567890123456789012345678901234567890123456789",
+              "size": 10485760
+            }
+          }
+        }
+      },
+      "repository": "https://github.com/awesome-dev/analytics-plugin",
+      "license": "Apache-2.0",
+      "author": {
+        "name": "Awesome Developer",
+        "github": "awesome-dev"
+      },
+      "stats": {
+        "downloads": {
+          "total": 2341
+        },
+        "stars": 67
+      },
+      "badges": {
+        "verified": false,
+        "community": true
+      }
+    }
+  ]
+}

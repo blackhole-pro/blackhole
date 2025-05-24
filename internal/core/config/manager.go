@@ -21,9 +21,9 @@ type ConfigManager struct {
 // NewConfigManager creates a new configuration manager
 func NewConfigManager(logger *zap.Logger) *ConfigManager {
 	if logger == nil {
-		// Default logger if not provided
+		// Default logger if not provided - use development for better readability
 		var err error
-		logger, err = zap.NewProduction()
+		logger, err = zap.NewDevelopment()
 		if err != nil {
 			// If we can't create a logger, fall back to no logging
 			logger = zap.NewNop()

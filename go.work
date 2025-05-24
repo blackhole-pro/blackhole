@@ -1,7 +1,8 @@
-go 1.21
+go 1.23.8
+
+toolchain go1.24.3
 
 use (
 	.
-	./internal/services/identity
 	./internal/services/test-service
 )
