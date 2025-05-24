@@ -18,7 +18,7 @@ import (
 // ProtocolLevelConnectionPool manages multiple gRPC connections for protocol-level routing
 type ProtocolLevelConnectionPool struct {
 	serviceName    string
-	endpoint       mesh.Endpoint
+	endpoint       mesh.ServiceEndpoint
 	
 	// Connection pool
 	connections     []*PooledConnection
@@ -58,7 +58,7 @@ type PooledConnection struct {
 // NewProtocolLevelConnectionPool creates a new connection pool for protocol-level routing
 func NewProtocolLevelConnectionPool(
 	serviceName string,
-	endpoint mesh.Endpoint,
+	endpoint mesh.ServiceEndpoint,
 	resourceManager *ResourceManager,
 	logger *zap.Logger,
 ) (*ProtocolLevelConnectionPool, error) {

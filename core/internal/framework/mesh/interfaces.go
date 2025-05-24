@@ -3,7 +3,6 @@
 package mesh
 
 import (
-	"context"
 	"net"
 	"time"
 )

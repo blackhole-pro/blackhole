@@ -42,7 +42,7 @@ type ManagedMeshPlugin struct {
 	plugin      Plugin
 	
 	// Mesh connectivity
-	endpoint    mesh.Endpoint
+	endpoint    mesh.ServiceEndpoint
 	grpcConn    *grpc.ClientConn
 	serviceName string
 	
@@ -360,7 +360,7 @@ func (m *MeshPluginManager) connectToPlugin(ctx context.Context, mp *ManagedMesh
 	}
 
 	mp.grpcConn = conn
-	mp.endpoint = mesh.Endpoint{
+	mp.endpoint = mesh.ServiceEndpoint{
 		Socket:  socketPath,
 		IsLocal: true,
 	}

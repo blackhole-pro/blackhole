@@ -24,7 +24,7 @@ import (
 type meshIsolation struct {
 	cmd            *exec.Cmd
 	socketPath     string
-	meshClient     mesh.Client
+	// meshClient     mesh.Client // TODO: implement mesh client
 	grpcConn       *grpc.ClientConn
 	resourceLimits plugins.PluginResources
 	logger         *zap.Logger
@@ -39,14 +39,14 @@ type meshPlugin struct {
 	isolation    *meshIsolation
 	info         plugins.PluginInfo
 	status       plugins.PluginStatus
-	meshEndpoint mesh.Endpoint
+	meshEndpoint mesh.ServiceEndpoint
 	logger       *zap.Logger
 	mu           sync.RWMutex
 }
 
 // MeshIsolationConfig configures mesh-based plugin isolation
 type MeshIsolationConfig struct {
-	MeshClient     mesh.Client
+	// MeshClient     mesh.Client // TODO: implement mesh client
 	SocketDir      string
 	Logger         *zap.Logger
 	DefaultTimeout time.Duration
@@ -121,7 +121,7 @@ func (p *meshPlugin) Start(ctx context.Context) error {
 
 	// Start the plugin process
 	if err := p.isolation.cmd.Start(); err != nil {
-		p.status = plugins.PluginStatusError
+		p.status = plugins.PluginStatusFailed
 		p.info.Status = p.status
 		return fmt.Errorf("failed to start plugin process: %w", err)
 	}
@@ -300,17 +300,17 @@ func (p *meshPlugin) registerWithMesh(ctx context.Context) error {
 	// Register the plugin's endpoint with the mesh network
 	serviceName := fmt.Sprintf("plugin.%s", p.spec.Name)
 	
-	endpoint := mesh.Endpoint{
+	endpoint := mesh.ServiceEndpoint{
 		Socket:  p.isolation.socketPath,
 		Address: "", // Unix socket, no TCP address
 		IsLocal: true,
 	}
 
 	// Register with mesh
-	if p.isolation.meshClient != nil {
-		// TODO: Implement mesh registration
-		// This would register the plugin's endpoint so other services can discover it
-	}
+	// TODO: Implement mesh registration when mesh client is available
+	// if p.isolation.meshClient != nil {
+	//	// This would register the plugin's endpoint so other services can discover it
+	// }
 
 	p.meshEndpoint = endpoint
 	p.logger.Info("Plugin registered with mesh", 
@@ -324,9 +324,10 @@ func (p *meshPlugin) unregisterFromMesh(ctx context.Context) error {
 	// Unregister from mesh network
 	serviceName := fmt.Sprintf("plugin.%s", p.spec.Name)
 	
-	if p.isolation.meshClient != nil {
-		// TODO: Implement mesh unregistration
-	}
+	// TODO: Implement mesh unregistration when mesh client is available
+	// if p.isolation.meshClient != nil {
+	//	// Unregister from mesh
+	// }
 
 	p.logger.Info("Plugin unregistered from mesh", zap.String("service", serviceName))
 	return nil
@@ -376,7 +377,7 @@ func (p *meshPlugin) monitorProcess() {
 
 	if p.status == plugins.PluginStatusRunning {
 		// Unexpected exit
-		p.status = plugins.PluginStatusError
+		p.status = plugins.PluginStatusFailed
 		p.info.Status = p.status
 		p.logger.Error("Plugin process exited unexpectedly", zap.Error(err))
 		

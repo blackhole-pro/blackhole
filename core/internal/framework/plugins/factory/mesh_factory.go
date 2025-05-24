@@ -50,7 +50,7 @@ func DefaultMeshPluginConfig() MeshPluginConfig {
 		SocketDir:        "/var/run/blackhole/plugins",
 		TempDir:          "/tmp/blackhole/plugins",
 		EnableDiscovery:  true,
-		DefaultIsolation: plugins.IsolationLevelProcess,
+		DefaultIsolation: plugins.IsolationProcess,
 		DefaultTimeout:   30,
 	}
 }
@@ -77,12 +77,8 @@ func NewMeshPluginManagerFactory(
 // CreatePluginManager creates a new mesh-based plugin manager
 func (f *MeshPluginManagerFactory) CreatePluginManager() (plugins.PluginManager, error) {
 	// Create registry
-	registryConfig := registry.Config{
-		LocalPath:     f.config.PluginDir,
-		ScanInterval:  0, // Disable automatic scanning for now
-		MarketplaceURL: "", // No marketplace yet
-	}
-	pluginRegistry := registry.New(registryConfig)
+	// TODO: Create marketplace client when available
+	pluginRegistry := registry.New(nil)
 
 	// Create mesh-aware loader
 	loaderConfig := loader.MeshLoaderConfig{
@@ -90,17 +86,20 @@ func (f *MeshPluginManagerFactory) CreatePluginManager() (plugins.PluginManager,
 		CacheDir:   f.config.CacheDir,
 		TempDir:    f.config.TempDir,
 		SocketDir:  f.config.SocketDir,
-		MeshClient: nil, // TODO: Create mesh client
+		// MeshClient: nil, // TODO: Create mesh client
 		Logger:     f.logger.With(zap.String("component", "loader")),
 	}
 	pluginLoader := loader.NewMeshPluginLoader(loaderConfig)
 
 	// Create state manager
-	stateStorage := state.NewFileStorage(f.config.StateDir)
-	stateManager := state.NewManager(stateStorage, state.NewJSONSerializer())
+	stateStorage, err := state.NewFileStateStorage(f.config.StateDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create state storage: %w", err)
+	}
+	stateManager := state.NewStateManagerWrapper(stateStorage, state.NewJSONStateSerializer())
 
 	// Create lifecycle manager
-	lifecycleManager := lifecycle.New()
+	lifecycleManager := lifecycle.NewLifecycleManager()
 
 	// Create the mesh plugin manager
 	managerConfig := plugins.MeshPluginManagerConfig{
@@ -134,24 +133,14 @@ func GetDefaultPluginSpec(name, version string) plugins.PluginSpec {
 	return plugins.PluginSpec{
 		Name:        name,
 		Version:     version,
-		Description: fmt.Sprintf("%s plugin", name),
-		Author:      "Unknown",
-		License:     "Unknown",
 		Source: plugins.PluginSource{
 			Type: plugins.SourceTypeLocal,
 			Path: fmt.Sprintf("/usr/local/lib/blackhole/plugins/%s/%s/plugin", name, version),
 		},
-		Isolation: plugins.IsolationLevelProcess,
+		Isolation: plugins.IsolationProcess,
 		Resources: plugins.PluginResources{
-			CPUShares:    50,  // 50% of one CPU
-			MemoryMB:     256, // 256MB RAM
-			MaxGoroutines: 100,
-		},
-		Permissions: []plugins.PluginPermission{
-			{
-				Resource: "network",
-				Actions:  []string{"connect"},
-			},
+			CPU:    50,  // 50% of one CPU
+			Memory: 256, // 256MB RAM
 		},
 	}
 }
@@ -167,6 +156,6 @@ func LoadPluginFromPath(path string) (plugins.PluginSpec, error) {
 			Type: plugins.SourceTypeLocal,
 			Path: path,
 		},
-		Isolation: plugins.IsolationLevelProcess,
+		Isolation: plugins.IsolationProcess,
 	}, nil
 }

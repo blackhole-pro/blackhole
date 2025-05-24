@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-// Endpoint represents a service endpoint
-type Endpoint struct {
+// ServiceEndpoint represents a service endpoint for routing
+type ServiceEndpoint struct {
 	Socket      string            `json:"socket,omitempty"`
 	Address     string            `json:"address,omitempty"`
 	IsLocal     bool              `json:"is_local"`
@@ -26,7 +26,7 @@ const (
 // ServiceInfo represents information about a registered service
 type ServiceInfo struct {
 	Name        string            `json:"name"`
-	Endpoints   []Endpoint        `json:"endpoints"`
+	Endpoints   []ServiceEndpoint `json:"endpoints"`
 	Health      HealthStatus      `json:"health"`
 	LastSeen    time.Time         `json:"last_seen"`
 	Metadata    map[string]string `json:"metadata,omitempty"`

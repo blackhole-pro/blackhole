@@ -9,7 +9,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/blackhole-pro/blackhole/core/internal/framework/mesh"
 	"github.com/blackhole-pro/blackhole/core/internal/framework/plugins"
 	"github.com/blackhole-pro/blackhole/core/internal/framework/plugins/executor"
 )
@@ -19,7 +18,7 @@ type MeshPluginLoader struct {
 	localPath    string
 	cacheDir     string
 	tempDir      string
-	meshClient   mesh.Client
+	// meshClient   mesh.Client // TODO: implement mesh client
 	socketDir    string
 	logger       *zap.Logger
 }
@@ -30,7 +29,7 @@ type MeshLoaderConfig struct {
 	CacheDir   string
 	TempDir    string
 	SocketDir  string
-	MeshClient mesh.Client
+	// MeshClient mesh.Client // TODO: implement mesh client
 	Logger     *zap.Logger
 }
 
@@ -57,7 +56,7 @@ func NewMeshPluginLoader(config MeshLoaderConfig) *MeshPluginLoader {
 		cacheDir:   config.CacheDir,
 		tempDir:    config.TempDir,
 		socketDir:  config.SocketDir,
-		meshClient: config.MeshClient,
+		// meshClient: config.MeshClient, // TODO: add when mesh client available
 		logger:     config.Logger,
 	}
 }
@@ -85,10 +84,10 @@ func (l *MeshPluginLoader) LoadPlugin(spec plugins.PluginSpec) (plugins.Plugin, 
 
 	// Create mesh isolation config
 	isolationConfig := executor.MeshIsolationConfig{
-		MeshClient:     l.meshClient,
+		// MeshClient:     l.meshClient, // TODO: add when mesh client available
 		SocketDir:      l.socketDir,
 		Logger:         l.logger,
-		DefaultTimeout: spec.Timeout,
+		// DefaultTimeout: spec.Timeout, // TODO: add timeout field to spec
 	}
 
 	// Create the mesh plugin
@@ -119,32 +118,32 @@ func (l *MeshPluginLoader) ValidatePlugin(spec plugins.PluginSpec) error {
 			return fmt.Errorf("local source requires path")
 		}
 	case plugins.SourceTypeRemote:
-		if spec.Source.URL == "" {
-			return fmt.Errorf("remote source requires URL")
+		if spec.Source.Path == "" { // Remote sources use Path for URL
+			return fmt.Errorf("remote source requires path (URL)")
 		}
 	case plugins.SourceTypeMarketplace:
-		if spec.Source.MarketplaceID == "" {
-			return fmt.Errorf("marketplace source requires ID")
+		if spec.Source.Path == "" { // Marketplace sources use Path for ID
+			return fmt.Errorf("marketplace source requires path (ID)")
 		}
 	default:
 		return fmt.Errorf("invalid source type: %s", spec.Source.Type)
 	}
 
 	// Validate resources
-	if spec.Resources.CPUShares < 0 {
+	if spec.Resources.CPU < 0 {
 		return fmt.Errorf("CPU shares cannot be negative")
 	}
-	if spec.Resources.MemoryMB < 0 {
+	if spec.Resources.Memory < 0 {
 		return fmt.Errorf("memory limit cannot be negative")
 	}
 
 	// Validate isolation level for mesh plugins
 	switch spec.Isolation {
-	case plugins.IsolationLevelProcess:
+	case plugins.IsolationProcess:
 		// This is the recommended level for mesh plugins
-	case plugins.IsolationLevelContainer, plugins.IsolationLevelVM:
+	case plugins.IsolationContainer, plugins.IsolationVM:
 		// These are also supported
-	case plugins.IsolationLevelNone, plugins.IsolationLevelThread:
+	case plugins.IsolationNone, plugins.IsolationThread:
 		return fmt.Errorf("mesh plugins require process, container, or VM isolation")
 	default:
 		return fmt.Errorf("invalid isolation level: %s", spec.Isolation)

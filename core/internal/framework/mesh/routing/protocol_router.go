@@ -1,7 +1,7 @@
 // Package mesh provides the service mesh components for the Blackhole platform.
 // It implements protocol-level routing, connection pooling, and resource management
 // for efficient inter-service communication using gRPC.
-package mesh
+package routing
 
 import (
 	"context"
@@ -12,15 +12,16 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/blackhole-pro/blackhole/core/internal/framework/mesh"
 	"github.com/blackhole-pro/blackhole/core/internal/framework/mesh/routing/pool"
 )
 
 // ProtocolRouter implements protocol-level gRPC routing with intelligent resource management
 type ProtocolRouter struct {
 	// Service discovery and routing
-	services         map[string][]Endpoint                         // service -> endpoints
+	services         map[string][]mesh.ServiceEndpoint            // service -> endpoints
 	connectionPools  map[string]*pool.ProtocolLevelConnectionPool  // service -> connection pool
-	serviceHealth    map[string]HealthStatus                       // service -> health status
+	serviceHealth    map[string]mesh.HealthStatus                 // service -> health status
 
 	// Resource management
 	resourceDetector *pool.ResourceDetector
@@ -56,9 +57,9 @@ func NewProtocolRouter(logger *zap.Logger) *ProtocolRouter {
 	resourceManager := pool.NewResourceManager(limits, logger)
 
 	return &ProtocolRouter{
-		services:           make(map[string][]Endpoint),
+		services:           make(map[string][]mesh.ServiceEndpoint),
 		connectionPools:    make(map[string]*pool.ProtocolLevelConnectionPool),
-		serviceHealth:      make(map[string]HealthStatus),
+		serviceHealth:      make(map[string]mesh.HealthStatus),
 		resourceDetector:   resourceDetector,
 		resourceManager:    resourceManager,
 		logger:             logger,
@@ -67,7 +68,7 @@ func NewProtocolRouter(logger *zap.Logger) *ProtocolRouter {
 }
 
 // RegisterService registers a service endpoint for protocol-level routing
-func (pr *ProtocolRouter) RegisterService(serviceName string, endpoint Endpoint) error {
+func (pr *ProtocolRouter) RegisterService(serviceName string, endpoint mesh.ServiceEndpoint) error {
 	pr.mutex.Lock()
 	defer pr.mutex.Unlock()
 
@@ -87,8 +88,8 @@ func (pr *ProtocolRouter) RegisterService(serviceName string, endpoint Endpoint)
 		// Add new endpoint
 		pr.services[serviceName] = append(endpoints, endpoint)
 	} else {
-		pr.services[serviceName] = []Endpoint{endpoint}
-		pr.serviceHealth[serviceName] = HealthStatusUnknown
+		pr.services[serviceName] = []mesh.ServiceEndpoint{endpoint}
+		pr.serviceHealth[serviceName] = mesh.HealthStatusUnknown
 	}
 
 	// Create connection pool for this service
@@ -135,12 +136,12 @@ func (pr *ProtocolRouter) RouteRequest(ctx context.Context, serviceName, fullMet
 	responseData, err := connectionPool.InvokeMethod(ctx, fullMethod, requestData)
 	if err != nil {
 		// Update service health on failure
-		pr.updateServiceHealth(serviceName, HealthStatusDegraded)
+		pr.updateServiceHealth(serviceName, mesh.HealthStatusDegraded)
 		return nil, fmt.Errorf("failed to route request to %s: %w", serviceName, err)
 	}
 
 	// Update service health on success
-	pr.updateServiceHealth(serviceName, HealthStatusHealthy)
+	pr.updateServiceHealth(serviceName, mesh.HealthStatusHealthy)
 
 	duration := time.Since(start)
 	pr.logger.Debug("Request routed successfully",
@@ -152,13 +153,13 @@ func (pr *ProtocolRouter) RouteRequest(ctx context.Context, serviceName, fullMet
 }
 
 // DiscoverService returns endpoint information for a service
-func (pr *ProtocolRouter) DiscoverService(serviceName string) (Endpoint, error) {
+func (pr *ProtocolRouter) DiscoverService(serviceName string) (mesh.ServiceEndpoint, error) {
 	pr.mutex.RLock()
 	defer pr.mutex.RUnlock()
 
 	endpoints, exists := pr.services[serviceName]
 	if !exists || len(endpoints) == 0 {
-		return Endpoint{}, fmt.Errorf("service %s not found", serviceName)
+		return mesh.ServiceEndpoint{}, fmt.Errorf("service %s not found", serviceName)
 	}
 
 	// Return the first healthy endpoint
@@ -171,14 +172,14 @@ func (pr *ProtocolRouter) DiscoverService(serviceName string) (Endpoint, error) 
 }
 
 // ListServices returns all registered services
-func (pr *ProtocolRouter) ListServices() map[string][]Endpoint {
+func (pr *ProtocolRouter) ListServices() map[string][]mesh.ServiceEndpoint {
 	pr.mutex.RLock()
 	defer pr.mutex.RUnlock()
 
 	// Create a copy to avoid race conditions
-	result := make(map[string][]Endpoint)
+	result := make(map[string][]mesh.ServiceEndpoint)
 	for service, endpoints := range pr.services {
-		endpointsCopy := make([]Endpoint, len(endpoints))
+		endpointsCopy := make([]mesh.ServiceEndpoint, len(endpoints))
 		copy(endpointsCopy, endpoints)
 		result[service] = endpointsCopy
 	}
@@ -187,20 +188,20 @@ func (pr *ProtocolRouter) ListServices() map[string][]Endpoint {
 }
 
 // GetHealth returns the health status of a service
-func (pr *ProtocolRouter) GetHealth(serviceName string) (HealthStatus, error) {
+func (pr *ProtocolRouter) GetHealth(serviceName string) (mesh.HealthStatus, error) {
 	pr.mutex.RLock()
 	defer pr.mutex.RUnlock()
 
 	health, exists := pr.serviceHealth[serviceName]
 	if !exists {
-		return HealthStatusUnknown, fmt.Errorf("service %s not found", serviceName)
+		return mesh.HealthStatusUnknown, fmt.Errorf("service %s not found", serviceName)
 	}
 
 	return health, nil
 }
 
 // UpdateHealth updates the health status of a service
-func (pr *ProtocolRouter) UpdateHealth(serviceName string, health HealthStatus) error {
+func (pr *ProtocolRouter) UpdateHealth(serviceName string, health mesh.HealthStatus) error {
 	pr.mutex.Lock()
 	defer pr.mutex.Unlock()
 
@@ -274,16 +275,16 @@ func (pr *ProtocolRouter) Close() error {
 	}
 
 	// Clear all data
-	pr.services = make(map[string][]Endpoint)
+	pr.services = make(map[string][]mesh.ServiceEndpoint)
 	pr.connectionPools = make(map[string]*pool.ProtocolLevelConnectionPool)
-	pr.serviceHealth = make(map[string]HealthStatus)
+	pr.serviceHealth = make(map[string]mesh.HealthStatus)
 
 	pr.logger.Info("Protocol router closed")
 	return lastError
 }
 
 // updateServiceHealth is an internal method to update service health
-func (pr *ProtocolRouter) updateServiceHealth(serviceName string, health HealthStatus) {
+func (pr *ProtocolRouter) updateServiceHealth(serviceName string, health mesh.HealthStatus) {
 	pr.mutex.Lock()
 	defer pr.mutex.Unlock()
 	pr.serviceHealth[serviceName] = health
