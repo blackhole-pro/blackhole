@@ -4,6 +4,10 @@ VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev
 BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
+# Set up PATH to include Go binaries
+GOPATH := $(shell go env GOPATH)
+export PATH := $(PATH):$(GOPATH)/bin
+
 # Platforms to build for
 PLATFORMS := darwin-amd64 darwin-arm64 linux-amd64 linux-arm64
 
