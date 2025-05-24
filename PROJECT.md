@@ -102,7 +102,7 @@ Blackhole Foundation is the **Framework Layer** - the foundational infrastructur
 
 **Key Capabilities**:
 - Network-transparent communication (local, remote, P2P, cloud, edge)
-- Automatic service discovery and registration
+- Automatic plugin discovery and registration
 - Intelligent load balancing and failover
 - Multi-protocol support (gRPC, HTTP, WebSocket, P2P)
 - End-to-end encryption and zero-trust security
@@ -251,7 +251,7 @@ mesh:
 topology: enterprise
 coordinator:
   role: main
-  plugins: [mesh-coordinator, storage-manager, auth-service]
+  plugins: [mesh-coordinator, storage-manager, auth-plugin]
 storage_nodes:
   - location: datacenter_1
     plugins: [storage-node, mesh-client]
@@ -411,10 +411,11 @@ core/
 │   │       ├── pricing/        # Pricing engine
 │   │       ├── analytics/      # Economic analytics
 │   │       └── interfaces.go   # Economics domain interfaces
-│   └── services/               # Service implementations
-│       ├── identity/           # Identity service
-│       ├── node/               # Node service
-│       └── ...                 # Other services
+│   └── plugins/                # Plugin implementations
+│       ├── node/               # P2P networking plugin
+│       ├── identity/           # Identity management plugin
+│       ├── storage/            # Distributed storage plugin
+│       └── ...                 # Other plugins
 ├── pkg/                        # Public packages
 │   ├── api/                    # Public APIs
 │   ├── sdk/                    # Framework SDK
@@ -538,7 +539,7 @@ blackhole status --detailed
 blackhole health --check-all
 
 # Plugin management
-blackhole plugin create --name my-plugin --type service
+blackhole plugin create --name my-plugin --type grpc
 blackhole plugin build --target local,remote,cloud
 blackhole plugin load my-plugin
 blackhole plugin reload my-plugin --version 2.0.0
@@ -599,7 +600,7 @@ blackhole system update --version 2.0.0
 
 2. **Create First Plugin**:
    ```bash
-   blackhole plugin create hello-world --template service
+   blackhole plugin create hello-world --template basic
    cd hello-world
    blackhole plugin build
    blackhole plugin test

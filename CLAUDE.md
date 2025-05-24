@@ -37,19 +37,16 @@ blackhole/
 │   │   │   ├── gen/        # Generated protobuf code
 │   │   │   └── proto/      # Protocol definitions
 │   │   │
-│   │   └── services/       # Service implementations
-│   │       ├── identity/   # Identity service
-│   │       ├── node/       # Node service & P2P
-│   │       ├── ledger/     # Ledger service
-│   │       ├── indexer/    # Indexer service
-│   │       ├── social/     # Social service
-│   │       ├── analytics/  # Analytics service
-│   │       ├── telemetry/  # Telemetry service
-│   │       └── wallet/     # Wallet service
+│   │   └── services/       # (DEPRECATED - Moving to plugins)
 │   │
 │   ├── pkg/                # Public packages and developer tools
 │   │   ├── api/            # Public API clients
 │   │   ├── sdk/            # SDK for developers
+│   │   ├── plugins/        # Plugin implementations
+│   │   │   ├── node/       # P2P networking plugin
+│   │   │   ├── identity/   # Identity management plugin
+│   │   │   ├── storage/    # Distributed storage plugin
+│   │   │   └── ...         # Other plugins
 │   │   ├── tools/          # Developer tools
 │   │   ├── templates/      # Project templates
 │   │   └── types/          # Shared type definitions
@@ -95,17 +92,18 @@ blackhole/
 ### Building
 
 - Build the main binary: `make build`
-- Build all services: `make build-services`
-- Build specific service: `make identity` (or any service name)
+- Build all plugins: `make build-plugins`
+- Build specific plugin: `make plugin-node` (or any plugin name)
+- Package plugins: `make plugin-package`
 - Build for all platforms: `make build-all`
 
 ### Development
 
 - Run the binary: `./bin/blackhole`
-- Start all services: `./bin/blackhole start --all`
-- Start specific services: `./bin/blackhole start --services=identity,node`
-- Check service status: `./bin/blackhole status`
-- View service logs: `./bin/blackhole logs identity`
+- Start with plugins: `./bin/blackhole start --plugins=node`
+- List loaded plugins: `./bin/blackhole plugins list`
+- Check plugin status: `./bin/blackhole plugins status`
+- Hot reload plugin: `./bin/blackhole plugins reload node`
 - Run with hot reload: `make dev`
 
 ### Testing
@@ -149,37 +147,42 @@ The platform uses a subprocess architecture where services run as independent OS
 
 ## Development Workflow
 
-1. **Service Development**: Implement services in `core/internal/services/`
+1. **Plugin Development**: Implement plugins in `core/pkg/plugins/`
 2. **Core Development**: Work on components in `core/internal/core/`
 3. **Runtime Development**: Work on orchestrator in `core/internal/runtime/`
 4. **Framework Development**: Work on domains in `core/internal/framework/`
-5. **RPC Development**: Define gRPC services in `core/internal/rpc/`
+5. **RPC Development**: Define gRPC services in plugin proto files
 6. **API Development**: Define public APIs in `core/pkg/api/`
 7. **SDK Development**: Build SDK in `core/pkg/sdk/`
 8. **Testing**: Write tests in `core/test/` directory (NOT alongside code)
 9. **Documentation**: Update docs as you go
 
-## Service Architecture
+## Plugin Architecture
 
-Each service follows this structure:
+Each plugin follows this structure:
 ```
-internal/services/<service>/
-├── main.go           # Service entry point
-├── go.mod            # Service module definition
-├── service.go        # Service implementation
-├── handlers.go       # gRPC handlers
-├── config.go         # Configuration structures
-└── <service>_test.go # Service tests
+pkg/plugins/<plugin>/
+├── main.go           # Plugin entry point
+├── go.mod            # Plugin module definition
+├── plugin.yaml       # Plugin manifest
+├── Makefile          # Plugin build system
+├── README.md         # Plugin documentation
+├── proto/
+│   └── v1/
+│       └── plugin.proto  # gRPC service definition
+├── docs/             # Plugin documentation
+└── examples/         # Usage examples
 ```
 
-## Adding a New Service
+## Adding a New Plugin
 
-1. Create service directory: `mkdir -p internal/services/myservice`
-2. Create service module: `cd internal/services/myservice && go mod init`
-3. Add to workspace: Update `go.work` to include the new service
-4. Create service main.go with gRPC server setup
-5. Add to Makefile: Add build target for the service
-6. Update configuration: Add service config to `configs/blackhole.yaml`
+1. Create plugin directory: `mkdir -p core/pkg/plugins/myplugin`
+2. Create plugin module: `cd core/pkg/plugins/myplugin && go mod init`
+3. Add to workspace: Update `go.work` to include the new plugin
+4. Create plugin.yaml manifest with metadata and capabilities
+5. Create main.go using the plugin SDK client
+6. Add to Makefile: Add plugin to PLUGINS variable
+7. Define gRPC interface in proto/v1/plugin.proto
 
 ## Project Identifiers
 

@@ -2,38 +2,56 @@
 
 orchestrator:
   socket_dir: ./sockets
-  services_dir: ./bin/services
+  plugins_dir: ./bin/plugins
   log_level: info
   
-services:
-  # Enable available services with actual binaries
-  identity:
-    enabled: true
-    resources:
-      cpu: 200        # 200% = 2 CPU cores
-      memory: 1024    # MB
-      io_weight: 500  # Medium I/O priority
-    config:
-      log_level: info
-      port: 9001
-      
+plugins:
+  # Plugin configurations
   node:
     enabled: true
+    source:
+      type: local
+      path: ./core/pkg/plugins/node
+    isolation: process
     resources:
-      cpu: 300        # 300% = 3 CPU cores (P2P networking intensive)
-      memory: 2048    # MB
-      io_weight: 700  # High I/O priority for P2P
+      cpu: 50        # 50% of CPU
+      memory: 256    # MB
+      network: 100   # Mbps
     config:
       log_level: info
-      port: 9002
       p2p_port: 4001
+      bootstrap_peers: []
       
-  # Test service for integration testing
-  test-service:
-    enabled: false
-    resources:
-      cpu: 100        # 100% = 1 CPU core
-      memory: 512     # MB
-      io_weight: 500  # Medium I/O priority
-    config:
-      log_level: info
+  # Future plugins can be added here
+  # storage:
+  #   enabled: false
+  #   source:
+  #     type: marketplace
+  #     id: "official/storage"
+  #   ...
+  
+# Mesh network configuration
+mesh:
+  discovery:
+    enabled: true
+    method: mdns  # multicast DNS for local discovery
+  
+  transport:
+    protocol: tcp
+    encryption: tls
+    
+# Framework configuration
+framework:
+  runtime:
+    health_check_interval: 30s
+    max_plugin_restarts: 3
+    
+  economics:
+    metering_enabled: false
+    billing_endpoint: ""
+    
+  resources:
+    global_limits:
+      total_cpu: 800      # 8 CPU cores
+      total_memory: 8192  # 8GB
+      total_disk: 100000  # 100GB

@@ -7,9 +7,6 @@ BUILD_DIR=build
 GO=go
 GOFLAGS=-v
 
-# Service directories (only services with main.go files)
-SERVICES=identity node
-
 # Plugin directories
 PLUGINS=node
 
@@ -20,16 +17,15 @@ build:
 	@mkdir -p $(BINARY_DIR)
 	$(GO) build $(GOFLAGS) -o $(BINARY_DIR)/$(BINARY_NAME) ./core/cmd/blackhole
 
-# Build all services
-.PHONY: build-services
-build-services: $(SERVICES)
+# Build all plugins
+.PHONY: build-plugins
+build-plugins: $(PLUGINS)
 
-# Build individual services
-.PHONY: $(SERVICES)
-$(SERVICES):
-	@echo "Building $@ service..."
-	@mkdir -p $(BINARY_DIR)/services/$@
-	$(GO) build $(GOFLAGS) -o $(BINARY_DIR)/services/$@/$@ ./core/internal/services/$@
+# Build individual plugins
+.PHONY: $(PLUGINS)
+$(PLUGINS):
+	@echo "Building $@ plugin..."
+	@cd core/pkg/plugins/$@ && $(MAKE) build
 
 # Run tests (excluding integration tests)
 .PHONY: test
