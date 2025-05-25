@@ -28,10 +28,18 @@
     "events.publish"
   ],
   "downloads": {
-    "linux-amd64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-amd64.plugin",
-    "linux-arm64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-arm64.plugin",
-    "darwin-amd64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-amd64.plugin",
-    "darwin-arm64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-arm64.plugin"
+    "linux-amd64": {
+      "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-amd64.plugin"
+    },
+    "linux-arm64": {
+      "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-arm64.plugin"
+    },
+    "darwin-amd64": {
+      "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-amd64.plugin"
+    },
+    "darwin-arm64": {
+      "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-arm64.plugin"
+    }
   },
   "checksums": {
     "linux-amd64": "sha256:6f466d678bfc51c5c2d9a5192927efa9fc940ff85a8e17ded892d5771d325dfd",
