@@ -2,7 +2,7 @@
   "id": "node",
   "name": "Node Plugin",
   "description": "P2P networking and distributed node management for Blackhole",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Blackhole Foundation",
   "license": "MIT",
   "homepage": "https://github.com/blackhole-pro/blackhole/tree/main/core/pkg/plugins/node",
@@ -28,16 +28,16 @@
     "events.publish"
   ],
   "downloads": {
-    "linux-amd64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-linux-amd64.plugin",
-    "linux-arm64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-linux-arm64.plugin",
-    "darwin-amd64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-darwin-amd64.plugin",
-    "darwin-arm64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.0/node-darwin-arm64.plugin"
+    "linux-amd64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-amd64.plugin",
+    "linux-arm64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-arm64.plugin",
+    "darwin-amd64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-amd64.plugin",
+    "darwin-arm64": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-arm64.plugin"
   },
   "checksums": {
-    "linux-amd64": "sha256:PLACEHOLDER",
-    "linux-arm64": "sha256:PLACEHOLDER",
-    "darwin-amd64": "sha256:PLACEHOLDER",
-    "darwin-arm64": "sha256:PLACEHOLDER"
+    "linux-amd64": "sha256:6f466d678bfc51c5c2d9a5192927efa9fc940ff85a8e17ded892d5771d325dfd",
+    "linux-arm64": "sha256:b56871cb0e174c6ef2e4690fa295cfdcff791876a8c85177faea4f92ffd31bfa",
+    "darwin-amd64": "sha256:3fe0572399fac54567510b58d0951b7ce079fa52067fd5a5bb701f98a7bd6e50",
+    "darwin-arm64": "sha256:c51d7a75aecf248c4ae64b2d9f00d49fd3692238c666b9d0b94401294fe4c83d"
   },
   "screenshots": [],
   "changelog": "https://github.com/blackhole-pro/blackhole/blob/main/core/pkg/plugins/node/CHANGELOG.md",
