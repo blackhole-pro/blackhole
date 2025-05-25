@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2025-05-25T03:22:44Z",
+  "updated": "2025-05-25T03:26:45Z",
   "baseUrl": "https://github.com/blackhole-pro/blackhole/releases/download",
   "plugins": [
     {
@@ -13,20 +13,20 @@
       "source": {},
       "downloads": {
         "darwin-amd64": {
-          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-amd64-v1.0.1.plugin",
-          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-amd64-v1.0.1.plugin.sha256"
+          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-amd64.plugin",
+          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-amd64.plugin.sha256"
         },
         "darwin-arm64": {
-          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-arm64-v1.0.1.plugin",
-          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-arm64-v1.0.1.plugin.sha256"
+          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-arm64.plugin",
+          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-darwin-arm64.plugin.sha256"
         },
         "linux-amd64": {
-          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-amd64-v1.0.1.plugin",
-          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-amd64-v1.0.1.plugin.sha256"
+          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-amd64.plugin",
+          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-amd64.plugin.sha256"
         },
         "linux-arm64": {
-          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-arm64-v1.0.1.plugin",
-          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-arm64-v1.0.1.plugin.sha256"
+          "url": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-arm64.plugin",
+          "checksumUrl": "https://github.com/blackhole-pro/blackhole/releases/download/plugins/node/v1.0.1/node-linux-arm64.plugin.sha256"
         }
       },
       "metadata": {
